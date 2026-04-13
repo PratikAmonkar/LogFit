@@ -1,9 +1,11 @@
+import { DataPortabilityService } from '@/services/dataPortabilityService';
 import { useUserStore } from '@/store/userStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useRef } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
@@ -13,30 +15,104 @@ export default function SettingsScreen() {
   const profileSheetRef = useRef<BottomSheetModal>(null);
   const exportSheetRef = useRef<BottomSheetModal>(null);
 
-  const { isLoading, data, updateProfile } = useUserStore()
+  const { isLoading, data, updateProfile } = useUserStore();
+
+  // UI States for Data Management
+  const [isExportingFull, setIsExportingFull] = useState(false);
+  const [isImportingFull, setIsImportingFull] = useState(false);
+  const [isExportingWorkouts, setIsExportingWorkouts] = useState(false);
+  const [isImportingWorkouts, setIsImportingWorkouts] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{ title: string; desc: string; onConfirm: () => void }>({
+    title: '',
+    desc: '',
+    onConfirm: () => { }
+  });
+
+  const triggerExportFull = () => {
+    setConfirmConfig({
+      title: 'Generate Full Backup?',
+      desc: 'This will create a secure vault file containing all your routines, history, and profile settings ready for sharing.',
+      onConfirm: async () => {
+        setIsExportingFull(true);
+        await DataPortabilityService.exportFullVault();
+        setTimeout(() => {
+          setIsExportingFull(false);
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 2000);
+        }, 2000);
+      }
+    });
+    setShowConfirm(true);
+  };
+
+  const triggerExportWorkouts = () => {
+    setConfirmConfig({
+      title: 'Export Workouts?',
+      desc: 'This will extract only your workout logs and routines into a portable file.',
+      onConfirm: () => {
+        setIsExportingWorkouts(true);
+        // User will add logic here
+        setTimeout(() => {
+          setIsExportingWorkouts(false);
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 2000);
+        }, 2000);
+      }
+    });
+    setShowConfirm(true);
+  };
+
+  const triggerImportFull = () => {
+    setConfirmConfig({
+      title: 'Restore Everything?',
+      desc: 'This will overwrite ALL your current profiles, history, and routines. This action is permanent.',
+      onConfirm: async () => {
+        setIsImportingFull(true);
+
+        await DataPortabilityService.importFullVault();
+        // User will add logic here
+        setTimeout(() => {
+          setIsImportingFull(false);
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 2000);
+        }, 2500);
+      }
+    });
+    setShowConfirm(true);
+  };
+
+  const triggerImportWorkouts = () => {
+    setConfirmConfig({
+      title: 'Import Workouts?',
+      desc: 'This will add workout logs and routines from your backup file to your current history.',
+      onConfirm: () => {
+        setIsImportingWorkouts(true);
+        // User will add logic here
+        setTimeout(() => {
+          setIsImportingWorkouts(false);
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 2000);
+        }, 2500);
+      }
+    });
+    setShowConfirm(true);
+  };
 
   const updateUnit = async (type: 'weight' | 'height', unit: string) => {
-
     const currentVal = data?.[type] || 0;
     const currentUnit = data?.[`${type}_unit` as keyof typeof data];
-
     if (currentUnit == unit) return;
 
     let newValue = currentVal;
     if (type === 'weight') {
-      newValue = unit === 'lb'
-        ? Math.round(currentVal * 2.20462)
-        : Math.round(currentVal / 2.20462);
+      newValue = unit === 'lb' ? Math.round(currentVal * 2.20462) : Math.round(currentVal / 2.20462);
     } else {
-      newValue = unit === 'ft'
-        ? parseFloat((currentVal * 0.0328084).toFixed(1))
-        : Math.round(currentVal / 0.0328084);
+      newValue = unit === 'ft' ? parseFloat((currentVal * 0.0328084).toFixed(1)) : Math.round(currentVal / 0.0328084);
     }
 
-    await updateProfile({
-      [`${type}_unit`]: unit,
-      [type]: newValue
-    })
+    await updateProfile({ [`${type}_unit`]: unit, [type]: newValue });
   };
 
   const renderBackdrop = useCallback(
@@ -138,14 +214,30 @@ export default function SettingsScreen() {
               </View>
             </View>
             <View style={styles.backupActions}>
-              <Pressable style={styles.actionBtn} onPress={() => { alert('Exporting Full Vault...'); }}>
-                <Ionicons name="share-outline" size={18} color="#0B63C6" />
-                <Text style={styles.actionBtnText}>Export All</Text>
+              <Pressable
+                style={styles.actionBtn}
+                onPress={triggerExportFull}
+                disabled={isExportingFull}
+              >
+                {isExportingFull ? <ActivityIndicator size="small" color="#0B63C6" /> : (
+                  <>
+                    <Ionicons name="share-outline" size={18} color="#0B63C6" />
+                    <Text style={styles.actionBtnText}>Export All</Text>
+                  </>
+                )}
               </Pressable>
               <View style={styles.vDivider} />
-              <Pressable style={styles.actionBtn} onPress={() => { alert('Select backup file to import...'); }}>
-                <Ionicons name="download-outline" size={18} color="#0B63C6" />
-                <Text style={styles.actionBtnText}>Import All</Text>
+              <Pressable
+                style={styles.actionBtn}
+                onPress={triggerImportFull}
+                disabled={isImportingFull}
+              >
+                {isImportingFull ? <ActivityIndicator size="small" color="#0B63C6" /> : (
+                  <>
+                    <Ionicons name="download-outline" size={18} color="#0B63C6" />
+                    <Text style={styles.actionBtnText}>Import All</Text>
+                  </>
+                )}
               </Pressable>
             </View>
           </View>
@@ -162,19 +254,76 @@ export default function SettingsScreen() {
               </View>
             </View>
             <View style={styles.backupActions}>
-              <Pressable style={styles.actionBtn} onPress={() => { alert('Exporting Workouts...'); }}>
-                <Ionicons name="share-outline" size={18} color="#22C55E" />
-                <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Export</Text>
+              <Pressable
+                style={styles.actionBtn}
+                onPress={triggerExportWorkouts}
+                disabled={isExportingWorkouts}
+              >
+                {isExportingWorkouts ? <ActivityIndicator size="small" color="#22C55E" /> : (
+                  <>
+                    <Ionicons name="share-outline" size={18} color="#22C55E" />
+                    <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Export</Text>
+                  </>
+                )}
               </Pressable>
               <View style={styles.vDivider} />
-              <Pressable style={styles.actionBtn} onPress={() => { alert('Select workout file...'); }}>
-                <Ionicons name="download-outline" size={18} color="#22C55E" />
-                <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Import</Text>
+              <Pressable
+                style={styles.actionBtn}
+                onPress={triggerImportWorkouts}
+                disabled={isImportingWorkouts}
+              >
+                {isImportingWorkouts ? <ActivityIndicator size="small" color="#22C55E" /> : (
+                  <>
+                    <Ionicons name="download-outline" size={18} color="#22C55E" />
+                    <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Import</Text>
+                  </>
+                )}
               </Pressable>
             </View>
           </View>
         </View>
       </ScrollView>
+
+      {/* Confirmation Modal */}
+      <Modal visible={showConfirm} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+          <View style={styles.confirmBox}>
+            <View style={styles.statusCircle}>
+              <Ionicons name="shield-checkmark-outline" size={32} color="#0B63C6" />
+            </View>
+            <Text style={styles.confirmTitle}>{confirmConfig.title}</Text>
+            <Text style={styles.confirmDesc}>{confirmConfig.desc}</Text>
+            <View style={styles.confirmActions}>
+              <Pressable style={styles.cancelLink} onPress={() => setShowConfirm(false)}>
+                <Text style={styles.cancelLinkText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.primaryConfirmBtn} onPress={() => { setShowConfirm(false); confirmConfig.onConfirm(); }}>
+                <Text style={styles.primaryConfirmBtnText}>Yes, Proceed</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Clean Success Modal (Gray/Black Theme) */}
+      <Modal visible={showSuccess} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+          <View style={styles.successCard}>
+            <View style={[styles.statusCircle, { backgroundColor: '#f2f4f7' }]}>
+              <Ionicons name="checkmark-circle" size={36} color="#334155" />
+            </View>
+            <Text style={styles.confirmTitle}>Process Complete!</Text>
+            <Text style={styles.confirmDesc}>Your data has been successfully processed and secured.</Text>
+            <View style={styles.confirmActions}>
+              <Pressable style={[styles.primaryConfirmBtn, { backgroundColor: '#334155', width: '100%' }]} onPress={() => setShowSuccess(false)}>
+                <Text style={styles.primaryConfirmBtnText}>Done</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <BottomSheetModal
         ref={profileSheetRef}
@@ -235,36 +384,6 @@ export default function SettingsScreen() {
           </View>
         </BottomSheetView>
       </BottomSheetModal>
-
-      {/* Bottom Sheet: Export */}
-      <BottomSheetModal
-        ref={exportSheetRef}
-        index={0}
-        snapPoints={['40%']}
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: '#fff', borderRadius: 24 }}
-        handleIndicatorStyle={{ backgroundColor: '#ccc', width: 40 }}
-      >
-        <BottomSheetView style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 24) }]}>
-          <Text style={styles.modalTitle}>Export Your Data</Text>
-          <Text style={styles.modalSubtitle}>Download a copy of your logs to store locally.</Text>
-
-          <Pressable style={styles.exportOptionBtn} onPress={() => { alert('Downloading CSV...'); exportSheetRef.current?.dismiss(); }}>
-            <Ionicons name="document-text-outline" size={24} color="#0B63C6" />
-            <Text style={styles.exportOptionText}>Export as CSV spreadsheet</Text>
-          </Pressable>
-
-          <Pressable style={styles.exportOptionBtn} onPress={() => { alert('Syncing to Health...'); exportSheetRef.current?.dismiss(); }}>
-            <Ionicons name="fitness-outline" size={24} color="#0B63C6" />
-            <Text style={styles.exportOptionText}>Sync to Apple Health & Fit</Text>
-          </Pressable>
-
-          <Pressable style={{ marginTop: 10, alignItems: 'center' }} onPress={() => exportSheetRef.current?.dismiss()}>
-            <Text style={styles.cancelBtnText}>Close</Text>
-          </Pressable>
-        </BottomSheetView>
-      </BottomSheetModal>
-
     </SafeAreaView>
   );
 }
@@ -274,7 +393,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '800', color: '#111', marginHorizontal: 20, marginTop: 10, marginBottom: 20 },
   section: { backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 20, marginBottom: 24, paddingVertical: 8, elevation: 1, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 5 },
   sectionHeader: { marginHorizontal: 20, marginBottom: 12 },
-  sectionTitle: { fontSize: 11, fontWeight: '700', color: '#8b92a5', letterSpacing: 1, marginTop: 8 },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: '#8b92a5', letterSpacing: 1, marginTop: 10 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
   iconBox: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#f2f4f7', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   rowContent: { flex: 1 },
@@ -299,6 +418,21 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: 13, fontWeight: '700', color: '#888' },
   toggleActiveText: { color: '#0B63C6' },
 
+  // Confirmation Modal Styles
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
+  confirmBox: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center' },
+  statusCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  confirmTitle: { fontSize: 20, fontWeight: '900', color: '#111', marginBottom: 8 },
+  confirmDesc: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  confirmActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  cancelLink: { paddingVertical: 12, paddingHorizontal: 20 },
+  cancelLinkText: { fontSize: 15, fontWeight: '700', color: '#666' },
+  primaryConfirmBtn: { backgroundColor: '#0B63C6', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
+  primaryConfirmBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
+
+  // Success Dialog Styles (Gray/Black Theme)
+  successCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f5', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
+
   modalContent: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   modalTitle: { fontSize: 22, fontWeight: '800', marginBottom: 6 },
   modalSubtitle: { fontSize: 14, color: '#666', marginBottom: 24, fontWeight: '500' },
@@ -309,8 +443,6 @@ const styles = StyleSheet.create({
   cancelBtnText: { fontSize: 15, fontWeight: '700', color: '#555' },
   saveBtn: { flex: 1, backgroundColor: '#0B63C6', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
   saveBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  exportOptionBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8f9fc', padding: 18, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#e6f0fa' },
-  exportOptionText: { fontSize: 15, fontWeight: '700', color: '#333', marginLeft: 12 },
 
   responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center' }
 });

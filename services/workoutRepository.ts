@@ -176,5 +176,84 @@ export const WorkoutRepository = {
       WHERE w.is_completed = 1
       ORDER BY w.date DESC LIMIT 1
     `);
+  },
+
+  async getEverything() {
+    const workouts = await db.getAllAsync<DatabaseWorkout>('SELECT * FROM workouts');
+    const exercises = await db.getAllAsync<DatabaseExercise>('SELECT * FROM exercises');
+    const sets = await db.getAllAsync<DatabaseSet>('SELECT * FROM sets');
+
+    return {
+      workouts,
+      exercises,
+      sets,
+    };
+  },
+
+  async getWorkoutDataOnly() {
+    const workouts = await db.getAllAsync<DatabaseWorkout>('SELECT * FROM workouts');
+    const exercises = await db.getAllAsync<DatabaseExercise>('SELECT * FROM exercises');
+    const sets = await db.getAllAsync<DatabaseSet>('SELECT * FROM sets');
+
+    return {
+      workouts,
+      exercises,
+      sets,
+    };
+  },
+
+  async restoreFromBackup(data: {
+    workouts: DatabaseWorkout[];
+    exercises: DatabaseExercise[];
+    sets: DatabaseSet[];
+  }) {
+    try {
+      await db.execAsync('BEGIN TRANSACTION');
+
+      // 🧹 Clear existing data
+      await db.runAsync('DELETE FROM sets');
+      await db.runAsync('DELETE FROM exercises');
+      await db.runAsync('DELETE FROM workouts');
+
+      // 🔁 Restore workouts
+      for (const w of data.workouts) {
+        await db.runAsync(
+          'INSERT INTO workouts (id, title, date, is_completed) VALUES (?, ?, ?, ?)',
+          w.id ?? null,
+          w.title,
+          w.date ?? null,
+          (w as any).is_completed ?? 0
+        );
+      }
+
+      // 🔁 Restore exercises
+      for (const e of data.exercises) {
+        await db.runAsync(
+          'INSERT INTO exercises (id, workout_id, name) VALUES (?, ?, ?)',
+          e.id ?? null,
+          e.workout_id,
+          e.name
+        );
+      }
+
+      // 🔁 Restore sets
+      for (const s of data.sets) {
+        await db.runAsync(
+          'INSERT INTO sets (id, exercise_id, weight, reps, is_completed) VALUES (?, ?, ?, ?, ?)',
+          s.id ?? null,
+          s.exercise_id,
+          s.weight,
+          s.reps,
+          s.is_completed ?? 0
+        );
+      }
+
+      await db.execAsync('COMMIT');
+    } catch (error) {
+      await db.execAsync('ROLLBACK');
+      console.error('Restore failed:', error);
+      throw error;
+    }
   }
+
 };
