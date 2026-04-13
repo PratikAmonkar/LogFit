@@ -7,6 +7,9 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { initDatabase } from "../services/db";
 
+import { RestTimerOverlay } from "@/components/RestTimerOverlay";
+import { WorkoutTimer } from "@/components/WorkoutTimer";
+
 export default function RootLayout() {
   const loadProfile = useUserStore((state) => state.loadProfile)
   const { tick, isWorkoutActive, isResting } = useTimerStore();
@@ -35,6 +38,10 @@ export default function RootLayout() {
       <BottomSheetModalProvider>
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
+        
+        {/* Global Components */}
+        <WorkoutTimer />
+        <RestTimerOverlay />
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

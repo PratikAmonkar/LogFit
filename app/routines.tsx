@@ -4,15 +4,69 @@ import { useRoutineStore } from '@/store/routineStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const HOURS = [0, 1, 2, 3, 4, 5];
 const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 const QUICK_DURATIONS = ['30 min', '45 min', '60 min', '90 min'];
+
+const RoutineCard = ({ routine, index, onEdit, onStart, onDelete }: any) => {
+  const [isEntered, setIsEntered] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsEntered(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Animated.View
+      entering={FadeIn.delay(index * 50).duration(400)}
+      style={[
+        styles.card,
+        {
+          elevation: isEntered ? 2 : 0,
+          shadowOpacity: isEntered ? 0.04 : 0
+        }
+      ]}
+    >
+      <View style={styles.cardHeaderRow}>
+        <Text style={styles.cardTitle}>{routine.name}</Text>
+        <Pressable onPress={() => onEdit(routine)} style={styles.editBtn}>
+          <Ionicons name="pencil-outline" size={18} color="#8b92a5" />
+        </Pressable>
+      </View>
+
+      <View style={styles.metaRow}>
+        <View style={styles.badge}>
+          <Ionicons name="calendar-outline" size={12} color="#555" style={{ marginRight: 4 }} />
+          <Text style={styles.badgeText}>{routine.days}</Text>
+        </View>
+        <View style={styles.badge}>
+          <Ionicons name="time-outline" size={12} color="#555" style={{ marginRight: 4 }} />
+          <Text style={styles.badgeText}>{routine.duration}</Text>
+        </View>
+      </View>
+
+      <View style={styles.cardFooter}>
+        <Pressable style={styles.startBtn} onPress={() => onStart(routine)}>
+          <Text style={styles.startBtnText}>START ROUTINE</Text>
+          <Ionicons name="play" size={14} color="#fff" style={{ marginLeft: 6 }} />
+        </Pressable>
+        <Pressable onPress={() => {
+          if (routine.id) {
+            onDelete(routine.id)
+          }
+        }} style={styles.deleteBtn}>
+          <Ionicons name="trash-outline" size={20} color="#d94b4b" />
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+};
 
 export default function RoutinesScreen() {
   const router = useRouter();
@@ -39,8 +93,12 @@ export default function RoutinesScreen() {
   );
 
   const checkActiveWorkout = async () => {
-    const active = await WorkoutRepository.getAnyActiveWorkoutToday();
-    setActiveWorkout(active);
+    try {
+      const active = await WorkoutRepository.getAnyActiveWorkoutToday();
+      setActiveWorkout(active);
+    } catch (err) {
+      console.error("Checking active workout failed", err);
+    }
   };
 
   const openAddModal = () => {
@@ -132,14 +190,6 @@ export default function RoutinesScreen() {
   };
 
 
-  if (isLoading) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#0B63C6" />
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -154,50 +204,28 @@ export default function RoutinesScreen() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.responsiveWrapper}>
-          {data.map((routine, index) => (
-            <Animated.View
-              key={routine.id}
-              entering={FadeInRight.delay(index * 100).duration(400)}
-            >
-              <View style={styles.card}>
-                <View style={styles.cardHeaderRow}>
-                  <Text style={styles.cardTitle}>{routine.name}</Text>
-                  <Pressable onPress={() => openEditModal(routine)} style={styles.editBtn}>
-                    <Ionicons name="pencil-outline" size={18} color="#8b92a5" />
-                  </Pressable>
-                </View>
-
-                <View style={styles.metaRow}>
-                  <View style={styles.badge}>
-                    <Ionicons name="calendar-outline" size={12} color="#555" style={{ marginRight: 4 }} />
-                    <Text style={styles.badgeText}>{routine.days}</Text>
-                  </View>
-                  <View style={styles.badge}>
-                    <Ionicons name="time-outline" size={12} color="#555" style={{ marginRight: 4 }} />
-                    <Text style={styles.badgeText}>{routine.duration}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.cardFooter}>
-                  <Pressable style={styles.startBtn} onPress={() => handleStartRoutine(routine)}>
-                    <Text style={styles.startBtnText}>START ROUTINE</Text>
-                    <Ionicons name="play" size={14} color="#fff" style={{ marginLeft: 6 }} />
-                  </Pressable>
-                  <Pressable onPress={() => {
-                    if (routine.id) {
-                      deleteRoutine(routine.id)
-                    }
-                  }} style={styles.deleteBtn}>
-                    <Ionicons name="trash-outline" size={20} color="#d94b4b" />
-                  </Pressable>
-                </View>
-
+      <ScrollView contentContainerStyle={[styles.scrollContent, { flex: isLoading ? 1 : 0 }]} showsVerticalScrollIndicator={false}>
+        {isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 40 }}>
+            <ActivityIndicator size="large" color="#0B63C6" />
+          </View>
+        ) : (
+          <View style={styles.responsiveWrapper}>
+            {data.length > 0 ? (
+              data.map((routine, index) => (
+                <RoutineCard key={routine.id} routine={routine} index={index} onEdit={openEditModal} onStart={handleStartRoutine} onDelete={deleteRoutine} />
+              ))
+            ) : (
+              <View style={{ alignItems: 'center', marginTop: 100 }}>
+                <Ionicons name="fitness-outline" size={60} color="#ccd2e3" />
+                <Text style={{ marginTop: 16, fontSize: 16, color: '#8b92a5', fontWeight: '600' }}>No routines created yet.</Text>
+                <Pressable onPress={openAddModal} style={{ marginTop: 10 }}>
+                  <Text style={{ color: '#0B63C6', fontWeight: '700' }}>Create your first routine</Text>
+                </Pressable>
               </View>
-            </Animated.View>
-          ))}
-        </View>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       {/* Editor Modal */}

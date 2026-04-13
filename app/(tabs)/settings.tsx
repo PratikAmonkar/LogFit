@@ -62,7 +62,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>PREFERENCES</Text>
 
             <View style={styles.row}>
-              <View style={styles.iconBox}><Ionicons name="scale-outline" size={20} color="#333" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="scale-outline" size={20} color="#0B63C6" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Weight Unit</Text>
               </View>
@@ -79,7 +79,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <View style={styles.row}>
-              <View style={styles.iconBox}><Ionicons name="body-outline" size={20} color="#333" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#F0FFF4' }]}><Ionicons name="body-outline" size={20} color="#22C55E" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Height Unit</Text>
               </View>
@@ -94,7 +94,7 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.divider} />
             <Pressable style={styles.row} onPress={() => router.push({ pathname: '/weight', params: { mode: 'edit', initialWeight: data?.weight?.toString(), initialUnit: data?.weight_unit } })}>
-              <View style={styles.iconBox}><Ionicons name="scale-outline" size={20} color="#333" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="scale-outline" size={20} color="#0B63C6" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Weight</Text>
                 <Text style={styles.rowSubtitle}>{data?.weight} {data?.weight_unit}</Text>
@@ -103,7 +103,7 @@ export default function SettingsScreen() {
             </Pressable>
             <View style={styles.divider} />
             <Pressable style={styles.row} onPress={() => router.push({ pathname: '/height', params: { mode: 'edit', initialHeight: data?.height?.toString(), initialUnit: data?.height_unit, gender: data?.gender } })}>
-              <View style={styles.iconBox}><Ionicons name="body-outline" size={20} color="#333" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#F0FFF4' }]}><Ionicons name="body-outline" size={20} color="#22C55E" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Height</Text>
                 <Text style={styles.rowSubtitle}>{data?.height} {data?.height_unit}</Text>
@@ -114,7 +114,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <Pressable style={styles.row} onPress={() => router.push({ pathname: '/schedule', params: { mode: 'edit', time: data?.gym_time, days: data?.gym_days } })}>
-              <View style={styles.iconBox}><Ionicons name="calendar-outline" size={20} color="#333" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#FFFBEB' }]}><Ionicons name="calendar-outline" size={20} color="#F59E0B" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Gym Schedule</Text>
                 <Text style={styles.rowSubtitle}>{data?.gym_time} • {data?.gym_days}</Text>
@@ -122,15 +122,56 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </Pressable>
           </View>
-          <View style={styles.section}>
+          <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>DATA MANAGEMENT</Text>
-            <Pressable style={styles.row} onPress={() => exportSheetRef.current?.present()}>
-              <View style={styles.iconBox}><Ionicons name="download-outline" size={20} color="#333" /></View>
-              <View style={styles.rowContent}>
-                <Text style={styles.rowText}>Export My Data</Text>
+          </View>
+
+          {/* Full Backup Card */}
+          <View style={styles.backupCard}>
+            <View style={styles.backupHeader}>
+              <View style={[styles.backupIcon, { backgroundColor: '#EEF4FF' }]}>
+                <Ionicons name="shield-checkmark" size={24} color="#0B63C6" />
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </Pressable>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.backupTitle}>Full Application Vault</Text>
+                <Text style={styles.backupDesc}>Backup everything: profiles, history, routines, and app preferences.</Text>
+              </View>
+            </View>
+            <View style={styles.backupActions}>
+              <Pressable style={styles.actionBtn} onPress={() => { alert('Exporting Full Vault...'); }}>
+                <Ionicons name="share-outline" size={18} color="#0B63C6" />
+                <Text style={styles.actionBtnText}>Export All</Text>
+              </Pressable>
+              <View style={styles.vDivider} />
+              <Pressable style={styles.actionBtn} onPress={() => { alert('Select backup file to import...'); }}>
+                <Ionicons name="download-outline" size={18} color="#0B63C6" />
+                <Text style={styles.actionBtnText}>Import All</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Workout Only Card */}
+          <View style={styles.backupCard}>
+            <View style={styles.backupHeader}>
+              <View style={[styles.backupIcon, { backgroundColor: '#F0FFF4' }]}>
+                <Ionicons name="barbell" size={24} color="#22C55E" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.backupTitle}>Workout Portability</Text>
+                <Text style={styles.backupDesc}>Export only your routines and workout history for easy migration.</Text>
+              </View>
+            </View>
+            <View style={styles.backupActions}>
+              <Pressable style={styles.actionBtn} onPress={() => { alert('Exporting Workouts...'); }}>
+                <Ionicons name="share-outline" size={18} color="#22C55E" />
+                <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Export</Text>
+              </Pressable>
+              <View style={styles.vDivider} />
+              <Pressable style={styles.actionBtn} onPress={() => { alert('Select workout file...'); }}>
+                <Ionicons name="download-outline" size={18} color="#22C55E" />
+                <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Import</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -232,13 +273,25 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fc' },
   title: { fontSize: 24, fontWeight: '800', color: '#111', marginHorizontal: 20, marginTop: 10, marginBottom: 20 },
   section: { backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 20, marginBottom: 24, paddingVertical: 8, elevation: 1, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 5 },
-  sectionTitle: { fontSize: 11, fontWeight: '700', color: '#8b92a5', letterSpacing: 1, marginHorizontal: 16, marginTop: 8, marginBottom: 4 },
+  sectionHeader: { marginHorizontal: 20, marginBottom: 12 },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: '#8b92a5', letterSpacing: 1, marginTop: 8 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
   iconBox: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#f2f4f7', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   rowContent: { flex: 1 },
   rowText: { fontSize: 16, fontWeight: '500', color: '#333' },
   rowSubtitle: { fontSize: 13, color: '#8b92a5', marginTop: 2 },
   divider: { height: 1, backgroundColor: '#f0f0f5', marginLeft: 64 },
+
+  // Data Management Cards
+  backupCard: { backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 20, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#f0f0f5' },
+  backupHeader: { flexDirection: 'row', padding: 16, gap: 12, alignItems: 'center' },
+  backupIcon: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  backupTitle: { fontSize: 16, fontWeight: '700', color: '#111', marginBottom: 2 },
+  backupDesc: { fontSize: 12, color: '#666', lineHeight: 18 },
+  backupActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#f1f5f9', backgroundColor: '#fdfdfe' },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
+  actionBtnText: { fontSize: 13, fontWeight: '800', color: '#0B63C6' },
+  vDivider: { width: 1, backgroundColor: '#f1f5f9' },
 
   toggleGroup: { flexDirection: 'row', backgroundColor: '#f2f4f7', borderRadius: 8, padding: 4 },
   toggleBtn: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 6 },

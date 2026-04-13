@@ -4,13 +4,15 @@ interface TimerState {
     workoutStartTime: number | null;
     workoutElapsed: number;
     isWorkoutActive: boolean;
+    activeWorkoutId: string | null;
+    activeRoutineName: string | null;
 
     restTimeLeft: number;
     restTotalTime: number;
     isResting: boolean;
 
 
-    startWorkout: () => void;
+    startWorkout: (id: string, name: string) => void;
     finishWorkout: () => void;
     startRest: (seconds: number) => void;
     stopRest: () => void;
@@ -21,13 +23,21 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     workoutStartTime: null,
     workoutElapsed: 0,
     isWorkoutActive: false,
+    activeWorkoutId: null,
+    activeRoutineName: null,
     restTimeLeft: 0,
     restTotalTime: 0,
     isResting: false,
 
-    startWorkout: () => {
-        console.log("startWorkout called");
-        set({ workoutStartTime: Date.now(), workoutElapsed: 0, isWorkoutActive: true })
+    startWorkout: (id, name) => {
+        console.log("startWorkout called with:", id, name);
+        set({ 
+            workoutStartTime: Date.now(), 
+            workoutElapsed: 0, 
+            isWorkoutActive: true,
+            activeWorkoutId: id,
+            activeRoutineName: name
+        })
     },
     finishWorkout: () => {
         console.log("finishWorkout called");

@@ -11,7 +11,7 @@ interface RoutineState {
 }
 
 export const useRoutineStore = create<RoutineState>((set) => ({
-    isLoading: false,
+    isLoading: true,
     data: [],
     getRoutines: async () => {
         set({ isLoading: true });

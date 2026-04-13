@@ -103,7 +103,7 @@ export default function WorkoutScreen() {
 
   const handleAccept = () => {
     if (!isWorkoutActive) {
-      startWorkout();
+      startWorkout(String(workoutId), String(routineName || "Active Workout"));
     }
     setShowStartModal(false);
   };
@@ -115,7 +115,7 @@ export default function WorkoutScreen() {
 
   const handleStartNew = () => {
     finishWorkout();
-    startWorkout();
+    startWorkout(String(workoutId), String(routineName || "Active Workout"));
     setShowStartModal(false);
   };
 
@@ -281,8 +281,6 @@ export default function WorkoutScreen() {
           <Text style={styles.finishBtnText}>FINISH WORKOUT</Text>
         </Pressable>
       </ScrollView>
-      <WorkoutTimer />
-      <RestTimerOverlay />
 
       <Modal visible={showStartModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>

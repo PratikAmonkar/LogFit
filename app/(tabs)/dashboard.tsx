@@ -1,44 +1,17 @@
-import { WorkoutRepository } from '@/services/workoutRepository';
-import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-
-const weeklyDurationData = [
-  { day: 'M', value: 45 },
-  { day: 'T', value: 60 },
-  { day: 'W', value: 0 },
-  { day: 'T', value: 75 },
-  { day: 'F', value: 50 },
-  { day: 'S', value: 0 },
-  { day: 'S', value: 90 }
-];
-const maxDuration = Math.max(...weeklyDurationData.map(d => d.value), 1);
-
-const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
-const currentMonth = currentDate.getMonth();
-const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-// Mock some active days for presentation
-const activeDays = new Set([2, 4, 5, 8, 9, 12, 15, 18, 20, 21, 24, 27, 28]);
-
-const monthActivityData = Array.from({ length: daysInMonth }, (_, index) => {
-  const day = index + 1;
-  return {
-    day,
-    active: activeDays.has(day)
-  };
-});
+import { WorkoutRepository } from "@/services/workoutRepository";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import Animated, { FadeInUp } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
   const [weeklyStats, setWeeklyStats] = useState({ workouts: 0, volume: 0 });
   const [activeDays, setActiveDays] = useState<number[]>([]);
   const [lastWorkout, setLastWorkout] = useState<any>(null);
@@ -61,6 +34,15 @@ export default function DashboardScreen() {
     }
   };
 
+  useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => setIsReady(true), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setIsReady(false);
+    }
+  }, [isLoading]);
+
   useFocusEffect(
     useCallback(() => {
       loadDashboardData();
@@ -68,6 +50,7 @@ export default function DashboardScreen() {
   );
 
   const currentDate = new Date();
+  const formattedDate = currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const monthActivityData = Array.from({ length: daysInMonth }, (_, index) => ({
     day: index + 1,
@@ -75,14 +58,22 @@ export default function DashboardScreen() {
   }));
 
   const containerWidth = Math.min(width, 768);
-  const boxSize = Math.min((containerWidth - 40 - 56) / 7, 48);
+  const boxSize = Math.min((containerWidth - 40 - 70) / 7, 44);
+
+  const formatDateInfo = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    return {
+      month: months[date.getMonth()],
+      day: date.getDate().toString().padStart(2, '0')
+    };
+  };
 
   const formatWorkoutDate = (dateStr: string) => {
     const d = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - d.getTime();
     const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
-
     if (daysDiff === 0) return 'Today';
     if (daysDiff === 1) return 'Yesterday';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -90,7 +81,7 @@ export default function DashboardScreen() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#0B63C6" />
       </View>
     );
@@ -101,47 +92,58 @@ export default function DashboardScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollArea}>
         <View style={styles.responsiveWrapper}>
 
+          {/* Modern Header */}
           <Animated.View entering={FadeInUp.delay(50).duration(400)} style={styles.header}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.greeting}>Good Evening</Text>
-              <Text style={styles.subGreeting}>
-                Workouts this week: {weeklyStats.workouts}/4
-              </Text>
+              <Text style={styles.dateLabel}>{formattedDate}</Text>
+              <Text style={styles.greeting}>Hey Hero!</Text>
             </View>
+            <Pressable style={styles.profileBtn}>
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>PA</Text>
+              </View>
+            </Pressable>
           </Animated.View>
 
-          <Animated.View entering={FadeInUp.delay(100).duration(400)} style={styles.statsCard}>
-            <Text style={styles.cardHeader}>THIS WEEK'S PROGRESS</Text>
-            <View style={styles.progressRow}>
-              <View style={styles.progressItem}>
-                <View style={[styles.circle, { borderColor: '#0B63C6' }]}>
-                  <Text style={styles.circleText}>{weeklyStats.workouts}</Text>
-                </View>
-                <Text style={styles.progressLabel}>Workouts</Text>
+          {/* Activity Overiew Grid */}
+          <Text style={styles.sectionTitle}>ACTIVITY OVERVIEW</Text>
+          <View style={styles.statsRow}>
+            <Animated.View entering={FadeInUp.delay(150).duration(400)} style={[styles.statMiniCard, { backgroundColor: '#EEF4FF' }]}>
+              <View style={[styles.miniIconBox, { backgroundColor: '#D9E8FF' }]}>
+                <Ionicons name="flame" size={20} color="#0B63C6" />
               </View>
+              <Text style={styles.miniVal}>{weeklyStats.workouts}</Text>
+              <Text style={styles.miniLabel}>Workouts</Text>
+            </Animated.View>
 
-              <View style={styles.progressItem}>
-                <View style={[styles.circle, { borderColor: '#4caf50' }]}>
-                  <Text style={styles.circleText}>{activeDays.length}</Text>
-                </View>
-                <Text style={styles.progressLabel}>Active Days</Text>
+            <Animated.View entering={FadeInUp.delay(200).duration(400)} style={[styles.statMiniCard, { backgroundColor: '#F0FFF4' }]}>
+              <View style={[styles.miniIconBox, { backgroundColor: '#DCFCE7' }]}>
+                <Ionicons name="stats-chart" size={20} color="#22C55E" />
               </View>
+              <Text style={styles.miniVal}>{activeDays.length}</Text>
+              <Text style={styles.miniLabel}>Active Days</Text>
+            </Animated.View>
 
-              <View style={styles.progressItem}>
-                <View style={[styles.circle, { borderColor: '#f44336' }]}>
-                  <Text style={styles.circleText}>
-                    {weeklyStats.volume > 1000 ? `${(weeklyStats.volume / 1000).toFixed(1)}k` : weeklyStats.volume}
-                  </Text>
-                </View>
-                <Text style={styles.progressLabel}>Volume (kg)</Text>
+            <Animated.View entering={FadeInUp.delay(250).duration(400)} style={[styles.statMiniCard, { backgroundColor: '#FFF5F5' }]}>
+              <View style={[styles.miniIconBox, { backgroundColor: '#FFE4E4' }]}>
+                <Ionicons name="barbell" size={20} color="#EF4444" />
               </View>
-            </View>
-          </Animated.View>
+              <Text style={styles.miniVal}>{weeklyStats.volume > 1000 ? `${(weeklyStats.volume / 1000).toFixed(1)}k` : weeklyStats.volume}</Text>
+              <Text style={styles.miniLabel}>Vol (kg)</Text>
+            </Animated.View>
+          </View>
 
           {/* Consistency Heatmap */}
-          <Animated.View entering={FadeInUp.delay(150).duration(400)} style={styles.chartCard}>
+          <Animated.View
+            entering={FadeInUp.delay(300).duration(400)}
+            style={[styles.chartCard, {
+              shadowOpacity: isReady ? 0.02 : 0,
+              elevation: isReady ? 1 : 0
+            }]}
+          >
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.cardHeader}>CONSISTENCY RECORD (THIS MONTH)</Text>
+              <Text style={styles.cardHeader}>MONTHLY CONSISTENCY</Text>
+              <Ionicons name="information-circle-outline" size={16} color="#8b92a5" />
             </View>
             <View style={styles.heatmapGrid}>
               {monthActivityData.map((item, i) => (
@@ -152,11 +154,13 @@ export default function DashboardScreen() {
                     {
                       width: boxSize,
                       height: boxSize,
-                      backgroundColor: item.active ? '#0B63C6' : '#f2f4f7'
+                      backgroundColor: item.active ? '#0B63C6' : '#F8FAFC',
+                      borderWidth: item.active ? 0 : 1,
+                      borderColor: '#F1F5F9'
                     }
                   ]}
                 >
-                  <Text style={[styles.heatmapDayText, { color: item.active ? '#fff' : '#8b92a5' }]}>
+                  <Text style={[styles.heatmapDayText, { color: item.active ? '#fff' : '#CBD5E1' }]}>
                     {item.day}
                   </Text>
                 </View>
@@ -164,47 +168,46 @@ export default function DashboardScreen() {
             </View>
           </Animated.View>
 
-          {/* Main CTA */}
-          <Animated.View entering={FadeInUp.delay(200).duration(400)}>
-            <Pressable style={styles.startBtn} onPress={() => router.push('/routines')}>
-              <Ionicons name="flash" size={20} color="#fff" />
-              <Text style={styles.startBtnText}>START NEW WORKOUT</Text>
-            </Pressable>
-          </Animated.View>
-
-          {/* Last Workout Quick View */}
+          {/* Last Workout Quick View - History Style */}
           {lastWorkout && (
-            <Animated.View entering={FadeInUp.delay(250).duration(400)}>
-              <View style={styles.sectionHeaderRow}>
-                <Text style={styles.cardHeader}>LAST LOGGED WORKOUT</Text>
-              </View>
+            <Animated.View entering={FadeInUp.delay(350).duration(400)}>
+              <Text style={styles.sectionTitle}>LAST SESSION RESULTS</Text>
+              <Pressable
+                style={[styles.historyStyleCard, {
+                  shadowOpacity: isReady ? 0.02 : 0,
+                  elevation: isReady ? 1 : 0
+                }]}
+                onPress={() => router.push({
+                  pathname: '/workout',
+                  params: { workoutId: lastWorkout.id, routineName: lastWorkout.title }
+                })}
+              >
+                <View style={styles.dateSection}>
+                  <Text style={styles.monthText}>{formatDateInfo(lastWorkout.date).month}</Text>
+                  <Text style={styles.dayText}>{formatDateInfo(lastWorkout.date).day}</Text>
+                </View>
 
-              <Pressable onPress={() => router.push({
-                pathname: '/workout',
-                params: { workoutId: lastWorkout.id, routineName: lastWorkout.title }
-              })}>
-                <View style={styles.lastWorkoutCard}>
-                  <View style={styles.lwHeader}>
-                    <View style={styles.lwIconBox}>
-                      <Ionicons name="barbell" size={20} color="#0B63C6" />
-                    </View>
-                    <View style={styles.lwTitleBox}>
-                      <Text style={styles.lwTitle}>{lastWorkout.title}</Text>
-                      <Text style={styles.lwTime}>{formatWorkoutDate(lastWorkout.date)}</Text>
-                    </View>
+                <View style={styles.verticalDivider} />
+
+                <View style={styles.contentSection}>
+                  <View style={styles.titleRow}>
+                    <Text style={styles.cardTitle} numberOfLines={1}>{lastWorkout.title}</Text>
                   </View>
 
-                  <View style={styles.divider} />
-
-                  <View style={styles.lwMetricsRow}>
-                    <View style={styles.lwMetric}>
-                      <Text style={styles.lwMetricVal}>{lastWorkout.exercise_count}</Text>
-                      <Text style={styles.lwMetricLabel}>EXERCISES</Text>
+                  <View style={styles.metricsRow}>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statLabel}>VOLUME</Text>
+                      <Text style={[styles.statValue, styles.statValueHighlight]}>
+                        {lastWorkout.total_volume} kg
+                      </Text>
                     </View>
-                    <View style={styles.lwMetric}>
-                      <Text style={styles.lwMetricVal}>{lastWorkout.total_volume}<Text style={styles.lwMetricUnit}> kg</Text></Text>
-                      <Text style={styles.lwMetricLabel}>TOTAL VOLUME</Text>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statLabel}>EXERCISES</Text>
+                      <Text style={styles.statValue}>
+                        {lastWorkout.exercise_count} items
+                      </Text>
                     </View>
+                    <Ionicons name="chevron-forward" size={16} color="#ccc" style={styles.chevron} />
                   </View>
                 </View>
               </Pressable>
@@ -212,58 +215,68 @@ export default function DashboardScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Modern Circular FAB */}
+      <Animated.View entering={FadeInUp.delay(600).duration(500)} style={styles.fabContainer}>
+        <Pressable
+          style={[styles.fab, {
+            shadowOpacity: isReady ? 0.1 : 0,
+            elevation: isReady ? 2 : 0
+          }]}
+          onPress={() => router.push('/routines')}
+        >
+          <Ionicons name="add" size={32} color="#fff" />
+        </Pressable>
+      </Animated.View>
+
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fc' },
-  scrollArea: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20 },
+  container: { flex: 1, backgroundColor: '#fff' },
+  scrollArea: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 100 },
   responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center' },
 
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-  greeting: { fontSize: 26, fontWeight: '800', color: '#111', marginBottom: 4 },
-  subGreeting: { fontSize: 14, color: '#555', fontWeight: '500' },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#eef0f5', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 28, marginTop: 10 },
+  dateLabel: { fontSize: 13, fontWeight: '700', color: '#8b92a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  greeting: { fontSize: 32, fontWeight: '900', color: '#111' },
+  profileBtn: { marginLeft: 10 },
+  avatarPlaceholder: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#f2f4f7', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff' },
+  avatarText: { fontSize: 16, fontWeight: '900', color: '#333' },
 
-  cardHeader: { fontSize: 11, fontWeight: '700', color: '#8b92a5', letterSpacing: 1, marginBottom: 12 },
+  sectionTitle: { fontSize: 12, fontWeight: '800', color: '#cbd5e1', letterSpacing: 1, marginBottom: 16, marginTop: 10 },
 
-  statsCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#f0f0f5' },
-  progressRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  progressItem: { alignItems: 'center', flex: 1 },
-  circle: { width: 64, height: 64, borderRadius: 32, borderWidth: 4, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  circleText: { fontSize: 18, fontWeight: '800', color: '#111' },
-  progressLabel: { fontSize: 12, fontWeight: '600', color: '#555' },
+  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 28 },
+  statMiniCard: { flex: 1, padding: 16, borderRadius: 20, alignItems: 'flex-start' },
+  miniIconBox: { width: 36, height: 36, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  miniVal: { fontSize: 20, fontWeight: '900', color: '#111', marginBottom: 2 },
+  miniLabel: { fontSize: 10, fontWeight: '700', color: '#666', textTransform: 'uppercase' },
 
-  chartCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#f0f0f5' },
-  chartContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 160, marginTop: 12 },
-  barItem: { alignItems: 'center', flex: 1 },
-  barBackground: { height: 120, width: 28, backgroundColor: '#f2f4f7', borderRadius: 8, justifyContent: 'flex-end', overflow: 'hidden', marginBottom: 8 },
-  barFill: { width: '100%', borderRadius: 8, minHeight: 4 },
-  barLabel: { fontSize: 13, fontWeight: '600', color: '#888' },
+  chartCard: { backgroundColor: '#fff', borderRadius: 28, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: '#f1f5f9' },
+  cardHeader: { fontSize: 13, fontWeight: '800', color: '#111', letterSpacing: 0.5 },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
 
-  heatmapGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 16, justifyContent: 'center', marginHorizontal: -4 },
-  heatmapBox: { borderRadius: 8, justifyContent: 'center', alignItems: 'center', margin: 4 },
-  heatmapDayText: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  heatmapGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', marginHorizontal: -4 },
+  heatmapBox: { borderRadius: 10, justifyContent: 'center', alignItems: 'center', margin: 4 },
+  heatmapDayText: { fontSize: 11, fontWeight: '800', textAlign: 'center' },
 
-  startBtn: { flexDirection: 'row', backgroundColor: '#0B63C6', paddingVertical: 18, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 30, shadowColor: '#0B63C6', shadowOpacity: 0.3, shadowRadius: 15, elevation: 5 },
-  startBtnText: { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
+  fabContainer: { position: 'absolute', bottom: 30, right: 30 },
+  fab: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#0B63C6', justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#0B63C6', shadowOpacity: 0.3, shadowRadius: 10 },
 
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  seeAll: { fontSize: 12, fontWeight: '700', color: '#0B63C6' },
-
-  lastWorkoutCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#f0f0f5' },
-  lwHeader: { flexDirection: 'row', alignItems: 'center' },
-  lwIconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#e6f0fa', justifyContent: 'center', alignItems: 'center', marginRight: 14 },
-  lwTitleBox: { flex: 1 },
-  lwTitle: { fontSize: 15, fontWeight: '800', color: '#111', marginBottom: 4 },
-  lwTime: { fontSize: 12, color: '#888', fontWeight: '600' },
-
-  divider: { height: 1, backgroundColor: '#f0f0f5', marginVertical: 16 },
-
-  lwMetricsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  lwMetric: { flex: 1 },
-  lwMetricVal: { fontSize: 16, fontWeight: '800', color: '#333', marginBottom: 4 },
-  lwMetricUnit: { fontSize: 12, fontWeight: '600', color: '#888' },
-  lwMetricLabel: { fontSize: 10, fontWeight: '700', color: '#8b92a5', letterSpacing: 0.5 },
+  // History style card for Dashboard - Flat version
+  historyStyleCard: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#f1f5f9' },
+  dateSection: { width: 50, alignItems: 'center', justifyContent: 'center' },
+  monthText: { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 2 },
+  dayText: { fontSize: 24, fontWeight: '800', color: '#0f172a' },
+  verticalDivider: { width: 1, backgroundColor: '#f1f5f9', marginHorizontal: 16 },
+  contentSection: { flex: 1, justifyContent: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  cardTitle: { flex: 1, fontSize: 16, fontWeight: '800', color: '#0f172a', marginRight: 8 },
+  metricsRow: { flexDirection: 'row', alignItems: 'center' },
+  statBox: { marginRight: 24 },
+  statLabel: { fontSize: 9, color: '#94a3b8', fontWeight: '800', marginBottom: 2, letterSpacing: 0.5 },
+  statValue: { fontSize: 14, color: '#334155', fontWeight: '700' },
+  statValueHighlight: { color: '#0B63C6' },
+  chevron: { position: 'absolute', right: 0 },
 });
