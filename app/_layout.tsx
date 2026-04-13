@@ -1,4 +1,5 @@
 import { useUserStore } from "@/store/userStore";
+import { useTimerStore } from "@/store/userTimerStore";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -8,14 +9,26 @@ import { initDatabase } from "../services/db";
 
 export default function RootLayout() {
   const loadProfile = useUserStore((state) => state.loadProfile)
+  const { tick, isWorkoutActive, isResting } = useTimerStore();
   useEffect(() => {
     const setup = async () => {
       await initDatabase();
-      // await seedDatabase();
       await loadProfile()
     };
     setup();
   }, []);
+
+  useEffect(() => {
+    if (!isWorkoutActive && !isResting) return;
+    console.log("Timer started because workout/rest is active!");
+    const interval = setInterval(() => {
+      tick();
+    }, 1000);
+    return () => {
+      console.log("Timer stopped!");
+      clearInterval(interval);
+    };
+  }, [isWorkoutActive, isResting, tick]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

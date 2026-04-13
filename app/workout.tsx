@@ -1,8 +1,12 @@
+import { RestTimerOverlay } from '@/components/RestTimerOverlay';
+import { WorkoutTimer } from '@/components/WorkoutTimer';
 import { EXERCISE_NAMES } from '@/constants/exercise_list';
 import { DatabaseExercise, DatabaseSet, WorkoutRepository } from '@/services/workoutRepository';
+import { useTimerStore } from '@/store/userTimerStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
+import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -63,10 +67,12 @@ export default function WorkoutScreen() {
   const navigation = useNavigation();
 
   const { workoutId, routineName } = useLocalSearchParams();
+  const { startRest, isWorkoutActive, startWorkout, finishWorkout, stopRest } = useTimerStore()
   const [exercises, setExercises] = useState<FullExercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSummary, setShowSummary] = useState(false);
+  const [showStartModal, setShowStartModal] = useState(true);
   const insets = useSafeAreaInsets();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -82,8 +88,11 @@ export default function WorkoutScreen() {
       const fullExercises = await Promise.all(data.map(async (ex) => {
         const sets = await WorkoutRepository.getSetsForExercise(ex.id!);
         const prevSets = await WorkoutRepository.getPreviousPerformance(ex.name, Number(workoutId));
+
+
         return { ...ex, sets, prevSets };
       }));
+
       setExercises(fullExercises);
     } catch (err) {
       console.error(err);
@@ -92,9 +101,31 @@ export default function WorkoutScreen() {
     }
   };
 
+  const handleAccept = () => {
+    if (!isWorkoutActive) {
+      startWorkout();
+    }
+    setShowStartModal(false);
+  };
+
+  const handleCancel = () => {
+    setShowStartModal(false);
+    router.back();
+  };
+
+  const handleStartNew = () => {
+    finishWorkout();
+    startWorkout();
+    setShowStartModal(false);
+  };
+
   const handleUpdateSet = async (id: number, weight: number, reps: number, completed: number) => {
     try {
       await WorkoutRepository.updateSet(id, weight, reps, completed);
+
+      if (completed === 1) {
+        startRest(60)
+      }
       setExercises(prev => prev.map(ex => ({
         ...ex,
         sets: ex.sets.map(s => s.id === id ? { ...s, weight, reps, is_completed: completed } : s)
@@ -166,6 +197,7 @@ export default function WorkoutScreen() {
     if (!workoutId) return;
     try {
       await WorkoutRepository.finishWorkout(Number(workoutId));
+      finishWorkout()
       setShowSummary(false);
       (navigation as any).reset({
         index: 0,
@@ -249,6 +281,50 @@ export default function WorkoutScreen() {
           <Text style={styles.finishBtnText}>FINISH WORKOUT</Text>
         </Pressable>
       </ScrollView>
+      <WorkoutTimer />
+      <RestTimerOverlay />
+
+      <Modal visible={showStartModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill} />
+
+          <Animated.View entering={ZoomIn.duration(400)} style={styles.resumeCard}>
+            <View style={styles.resumeIconOuter}>
+              <View style={styles.iconCircleLarge}>
+                <Ionicons name={isWorkoutActive ? "refresh-circle" : "play"} size={42} color="#0B63C6" />
+              </View>
+            </View>
+
+            <Text style={styles.resumeTitle}>
+              {isWorkoutActive ? "Active Session" : "Start Workout?"}
+            </Text>
+
+            <Text style={styles.resumeSubtitle}>
+              {isWorkoutActive
+                ? "You have a workout session already in progress. Would you like to resume it or start fresh?"
+                : "Are you ready to begin? The timer will start counting once you confirm your session."}
+            </Text>
+
+            <View style={{ width: '100%', gap: 12 }}>
+              <Pressable style={styles.resumeBtn} onPress={handleAccept}>
+                <Text style={styles.resumeBtnText}>
+                  {isWorkoutActive ? "RESUME SESSION" : "START NOW"}
+                </Text>
+              </Pressable>
+
+              {isWorkoutActive && (
+                <Pressable style={styles.startNewBtn} onPress={handleStartNew}>
+                  <Text style={styles.startNewBtnText}>START NEW WORKOUT</Text>
+                </Pressable>
+              )}
+
+              <Pressable style={styles.cancelLink} onPress={handleCancel}>
+                <Text style={styles.cancelLinkText}>Not yet, go back</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
 
       <Modal visible={showSummary} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -368,5 +444,18 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 9, fontWeight: '700', color: '#8b92a5', letterSpacing: 1 },
   doneBtn: { backgroundColor: '#111', width: '100%', paddingVertical: 18, borderRadius: 16, alignItems: 'center' },
   doneBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
-  confetti: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 100 }
+  confetti: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 100 },
+
+  // Resume Modal Styles
+  resumeCard: { backgroundColor: 'rgba(255, 255, 255, 0.98)', width: '100%', borderRadius: 32, padding: 32, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 10 },
+  resumeIconOuter: { marginBottom: 20 },
+  iconCircleLarge: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#e6f0fa', justifyContent: 'center', alignItems: 'center' },
+  resumeTitle: { fontSize: 22, fontWeight: '900', color: '#111', marginBottom: 10 },
+  resumeSubtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 30, lineHeight: 22 },
+  resumeBtn: { backgroundColor: '#0B63C6', width: '100%', paddingVertical: 18, borderRadius: 18, alignItems: 'center' },
+  resumeBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
+  startNewBtn: { backgroundColor: '#f2f4f7', width: '100%', paddingVertical: 16, borderRadius: 18, alignItems: 'center' },
+  startNewBtnText: { color: '#444', fontSize: 13, fontWeight: '700' },
+  cancelLink: { marginTop: 15, paddingVertical: 10 },
+  cancelLinkText: { color: '#888', fontSize: 13, fontWeight: '700' },
 });
