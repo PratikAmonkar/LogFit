@@ -129,7 +129,7 @@ export default function HistoryScreen() {
                   style={styles.card}
                   onPress={() => router.push({
                     pathname: '/workout',
-                    params: { workoutId: item.id, routineName: item.title }
+                    params: { workoutId: item.id, routineName: item.title, viewOnly: 'true' }
                   })}
                 >
                   <View style={styles.dateSection}>

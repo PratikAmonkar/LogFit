@@ -24,6 +24,8 @@ export default function SettingsScreen() {
   const [isImportingWorkouts, setIsImportingWorkouts] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [confirmConfig, setConfirmConfig] = useState<{ title: string; desc: string; onConfirm: () => void }>({
     title: '',
     desc: '',
@@ -36,12 +38,15 @@ export default function SettingsScreen() {
       desc: 'This will create a secure vault file containing all your routines, history, and profile settings ready for sharing.',
       onConfirm: async () => {
         setIsExportingFull(true);
-        await DataPortabilityService.exportFullVault();
-        setTimeout(() => {
-          setIsExportingFull(false);
+        try {
+          await DataPortabilityService.exportFullVault();
           setShowSuccess(true);
-          setTimeout(() => setShowSuccess(false), 2000);
-        }, 2000);
+        } catch (err: any) {
+          setErrorMessage(err?.message || 'Export failed. Please try again.');
+          setShowError(true);
+        } finally {
+          setIsExportingFull(false);
+        }
       }
     });
     setShowConfirm(true);
@@ -51,14 +56,17 @@ export default function SettingsScreen() {
     setConfirmConfig({
       title: 'Export Workouts?',
       desc: 'This will extract only your workout logs and routines into a portable file.',
-      onConfirm: () => {
+      onConfirm: async () => {
         setIsExportingWorkouts(true);
-        // User will add logic here
-        setTimeout(() => {
-          setIsExportingWorkouts(false);
+        try {
+          await DataPortabilityService.exportWorkoutsOnly();
           setShowSuccess(true);
-          setTimeout(() => setShowSuccess(false), 2000);
-        }, 2000);
+        } catch (err: any) {
+          setErrorMessage(err?.message || 'Export failed. Please try again.');
+          setShowError(true);
+        } finally {
+          setIsExportingWorkouts(false);
+        }
       }
     });
     setShowConfirm(true);
@@ -70,14 +78,16 @@ export default function SettingsScreen() {
       desc: 'This will overwrite ALL your current profiles, history, and routines. This action is permanent.',
       onConfirm: async () => {
         setIsImportingFull(true);
-
-        await DataPortabilityService.importFullVault();
-        // User will add logic here
-        setTimeout(() => {
+        try {
+          const result = await DataPortabilityService.importFullVault();
+          if (result === true) setShowSuccess(true);
+          // result === false means user cancelled picker — do nothing
+        } catch (err: any) {
+          setErrorMessage(err?.message || 'Import failed. Please check the file and try again.');
+          setShowError(true);
+        } finally {
           setIsImportingFull(false);
-          setShowSuccess(true);
-          setTimeout(() => setShowSuccess(false), 2000);
-        }, 2500);
+        }
       }
     });
     setShowConfirm(true);
@@ -87,14 +97,18 @@ export default function SettingsScreen() {
     setConfirmConfig({
       title: 'Import Workouts?',
       desc: 'This will add workout logs and routines from your backup file to your current history.',
-      onConfirm: () => {
+      onConfirm: async () => {
         setIsImportingWorkouts(true);
-        // User will add logic here
-        setTimeout(() => {
+        try {
+          const result = await DataPortabilityService.importWorkoutsOnly();
+          if (result === true) setShowSuccess(true);
+          // result === false means user cancelled picker — do nothing
+        } catch (err: any) {
+          setErrorMessage(err?.message || 'Import failed. Please check the file and try again.');
+          setShowError(true);
+        } finally {
           setIsImportingWorkouts(false);
-          setShowSuccess(true);
-          setTimeout(() => setShowSuccess(false), 2000);
-        }, 2500);
+        }
       }
     });
     setShowConfirm(true);
@@ -134,9 +148,11 @@ export default function SettingsScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.responsiveWrapper}>
-          <View style={styles.section}>
+          <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>PREFERENCES</Text>
+          </View>
 
+          <View style={styles.section}>
             <View style={styles.row}>
               <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="scale-outline" size={20} color="#0B63C6" /></View>
               <View style={styles.rowContent}>
@@ -317,8 +333,27 @@ export default function SettingsScreen() {
             <Text style={styles.confirmTitle}>Process Complete!</Text>
             <Text style={styles.confirmDesc}>Your data has been successfully processed and secured.</Text>
             <View style={styles.confirmActions}>
-              <Pressable style={[styles.primaryConfirmBtn, { backgroundColor: '#334155', width: '100%' }]} onPress={() => setShowSuccess(false)}>
+              <Pressable style={[styles.primaryConfirmBtn, { backgroundColor: '#0B63C6', width: '100%' }]} onPress={() => setShowSuccess(false)}>
                 <Text style={styles.primaryConfirmBtnText}>Done</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Error Modal */}
+      <Modal visible={showError} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+          <View style={styles.errorCard}>
+            <View style={[styles.statusCircle, { backgroundColor: '#FEE2E2' }]}>
+              <Ionicons name="close-circle" size={36} color="#DC2626" />
+            </View>
+            <Text style={[styles.confirmTitle, { color: '#DC2626' }]}>Something Went Wrong</Text>
+            <Text style={styles.confirmDesc}>{errorMessage}</Text>
+            <View style={styles.confirmActions}>
+              <Pressable style={[styles.primaryConfirmBtn, { backgroundColor: '#DC2626', width: '100%' }]} onPress={() => setShowError(false)}>
+                <Text style={styles.primaryConfirmBtnText}>Dismiss</Text>
               </Pressable>
             </View>
           </View>
@@ -432,6 +467,9 @@ const styles = StyleSheet.create({
 
   // Success Dialog Styles (Gray/Black Theme)
   successCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f5', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
+
+  // Error Dialog Styles
+  errorCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#FEE2E2', elevation: 12, shadowColor: '#DC2626', shadowOpacity: 0.1, shadowRadius: 20 },
 
   modalContent: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   modalTitle: { fontSize: 22, fontWeight: '800', marginBottom: 6 },

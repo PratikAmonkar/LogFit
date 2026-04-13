@@ -20,7 +20,7 @@ export const DataPortabilityService = {
                     database: dbStats,
                     settings: settingsObj,
                 }
-            }
+            };
             const fileName = `LogFit_Vault_${Date.now()}.json`;
             const fileUri = Paths.cache.uri + fileName;
 
@@ -36,10 +36,10 @@ export const DataPortabilityService = {
         }
     },
 
-    importFullVault: async () => {
+    importFullVault: async (): Promise<boolean> => {
         try {
             const result = await DocumentPicker.getDocumentAsync({ type: "application/json" });
-            if (result.canceled) return;
+            if (result.canceled) return false; // User cancelled — not an error
 
             const file = new File(result.assets[0].uri);
             const fileContent = await file.text();
@@ -47,7 +47,7 @@ export const DataPortabilityService = {
             const vault = JSON.parse(fileContent);
 
             if (vault.type !== "FULL_VAULT") {
-                throw new Error("Invalid Vault File");
+                throw new Error("Invalid backup file. Please select a valid LogFit Full Vault (.json) file.");
             }
 
             const settingsEntries = Object.entries(vault.data.settings);
@@ -58,24 +58,54 @@ export const DataPortabilityService = {
             return true;
         } catch (error) {
             console.error("Import Vault Failed:", error);
+            throw error;
         }
     },
 
     exportWorkoutsOnly: async () => {
-        const workoutData = await WorkoutRepository.getWorkoutDataOnly();
-        const payload = {
-            type: 'WORKOUT_PORTFOLIO',
-            data: workoutData
-        };
-        const fileName = `LogFit_Workouts.json`;
-        const fileUri = Paths.cache.uri + fileName;
+        try {
+            const workoutData = await WorkoutRepository.getWorkoutDataOnly();
+            const payload = {
+                version: "1.0.0",
+                timeStamp: new Date().toISOString(),
+                type: 'WORKOUT_PORTFOLIO',
+                data: workoutData
+            };
+            const fileName = `LogFit_Workouts_${Date.now()}.json`;
+            const fileUri = Paths.cache.uri + fileName;
 
-        const file = new File(fileUri);
-        file.write(JSON.stringify(payload));
+            const file = new File(fileUri);
+            file.write(JSON.stringify(payload));
 
-        if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(fileUri);
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(fileUri);
+            }
+        } catch (error) {
+            console.error("Export Workouts Failed:", error);
+            throw error;
         }
-        await Sharing.shareAsync(fileUri);
+    },
+
+    importWorkoutsOnly: async (): Promise<boolean> => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({ type: "application/json" });
+            if (result.canceled) return false; // User cancelled — not an error
+
+            const file = new File(result.assets[0].uri);
+            const fileContent = await file.text();
+
+            const payload = JSON.parse(fileContent);
+
+            if (payload.type !== "WORKOUT_PORTFOLIO") {
+                throw new Error("Invalid file. Please select a valid LogFit Workout Portfolio (.json) file.");
+            }
+
+            await WorkoutRepository.restoreFromBackup(payload.data);
+
+            return true;
+        } catch (error) {
+            console.error("Import Workouts Failed:", error);
+            throw error;
+        }
     }
-}
+};

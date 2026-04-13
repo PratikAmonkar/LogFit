@@ -62,17 +62,45 @@ function WorkoutSetRow({ set, index, prevSet, onSave, onDelete }: {
   );
 }
 
+function ReadOnlySetRow({ set, index }: { set: DatabaseSet; index: number }) {
+  return (
+    <View style={styles.setRow}>
+      <View style={{ width: 20, marginRight: 10 }} />
+      <Text style={[styles.setCellText, { width: 30, fontWeight: '700', textAlign: 'center' }]}>{index + 1}</Text>
+      <Text style={[styles.setCellText, { flex: 1.5, paddingLeft: 8 }]}>
+        {set.weight > 0 || set.reps > 0 ? `${set.weight}kg x ${set.reps}` : '-'}
+      </Text>
+      <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, justifyContent: 'center' }]}>
+        <Text style={[styles.setRowInput, { textAlign: 'center', paddingVertical: 8, fontWeight: '700', color: '#111' }]}>
+          {set.weight || 0}
+        </Text>
+      </View>
+      <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, justifyContent: 'center' }]}>
+        <Text style={[styles.setRowInput, { textAlign: 'center', paddingVertical: 8, fontWeight: '700', color: '#111' }]}>
+          {set.reps || 0}
+        </Text>
+      </View>
+      <View
+        style={[styles.checkBtn, set.is_completed ? styles.checkBtnComplete : null]}
+      >
+        <Ionicons name="checkmark" size={16} color="#fff" />
+      </View>
+    </View>
+  );
+}
+
 export default function WorkoutScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  const { workoutId, routineName } = useLocalSearchParams();
+  const { workoutId, routineName, viewOnly } = useLocalSearchParams();
+  const isViewOnly = viewOnly === 'true';
   const { startRest, isWorkoutActive, startWorkout, finishWorkout, stopRest } = useTimerStore()
   const [exercises, setExercises] = useState<FullExercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSummary, setShowSummary] = useState(false);
-  const [showStartModal, setShowStartModal] = useState(true);
+  const [showStartModal, setShowStartModal] = useState(!isViewOnly);
   const insets = useSafeAreaInsets();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -239,15 +267,17 @@ export default function WorkoutScreen() {
                 <Text style={styles.exerciseIndex}>0{index + 1}</Text>
                 <Text style={styles.exerciseName}>{item.name}</Text>
               </View>
-              <Pressable style={styles.iconBtn} onPress={() => handleDeleteExercise(item.id!)}>
-                <Ionicons name="trash-outline" size={20} color="#d94b4b" />
-              </Pressable>
+              {!isViewOnly && (
+                <Pressable style={styles.iconBtn} onPress={() => handleDeleteExercise(item.id!)}>
+                  <Ionicons name="trash-outline" size={20} color="#d94b4b" />
+                </Pressable>
+              )}
             </View>
 
             <View style={styles.setsHeader}>
-              <View style={{ width: 20, marginRight: 10 }} />
+              {!isViewOnly && <View style={{ width: 20, marginRight: 10 }} />}
               <Text style={[styles.setHeaderText, { width: 30, textAlign: 'center' }]}>SET</Text>
-              <Text style={[styles.setHeaderText, { flex: 1.5, paddingLeft: 8 }]}>PREVIOUS</Text>
+              <Text style={[styles.setHeaderText, { flex: 1.5, paddingLeft: 8 }]}>{isViewOnly ? 'WEIGHT × REPS' : 'PREVIOUS'}</Text>
               <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center' }]}>kg</Text>
               <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center' }]}>REPS</Text>
               <View style={{ width: 32 }} />
@@ -255,31 +285,41 @@ export default function WorkoutScreen() {
 
             {item.sets.length > 0 ? (
               item.sets.map((set, sIdx) => (
-                <WorkoutSetRow
-                  key={set.id} set={set} index={sIdx}
-                  prevSet={item.prevSets?.[sIdx]} onSave={handleUpdateSet} onDelete={handleDeleteSet}
-                />
+                isViewOnly ? (
+                  <ReadOnlySetRow key={set.id} set={set} index={sIdx} />
+                ) : (
+                  <WorkoutSetRow
+                    key={set.id} set={set} index={sIdx}
+                    prevSet={item.prevSets?.[sIdx]} onSave={handleUpdateSet} onDelete={handleDeleteSet}
+                  />
+                )
               ))
             ) : (
               <View style={{ paddingVertical: 10, alignItems: 'center' }}>
-                <Text style={{ color: '#8b92a5', fontSize: 12, fontWeight: '600' }}>No sets added yet</Text>
+                <Text style={{ color: '#8b92a5', fontSize: 12, fontWeight: '600' }}>No sets recorded</Text>
               </View>
             )}
 
-            <Pressable style={styles.addSetBtn} onPress={() => handleAddSet(item.id!)}>
-              <Text style={styles.addSetBtnText}>+ Add Set</Text>
-            </Pressable>
+            {!isViewOnly && (
+              <Pressable style={styles.addSetBtn} onPress={() => handleAddSet(item.id!)}>
+                <Text style={styles.addSetBtnText}>+ Add Set</Text>
+              </Pressable>
+            )}
           </Animated.View>
         ))}
 
-        <Pressable style={styles.addBtn} onPress={() => bottomSheetModalRef.current?.present()}>
-          <View style={styles.addCircle}><Ionicons name="add" size={20} color="#555" /></View>
-          <Text style={styles.addBtnText}>INJECT NEW MOVEMENT</Text>
-        </Pressable>
+        {!isViewOnly && (
+          <>
+            <Pressable style={styles.addBtn} onPress={() => bottomSheetModalRef.current?.present()}>
+              <View style={styles.addCircle}><Ionicons name="add" size={20} color="#555" /></View>
+              <Text style={styles.addBtnText}>INJECT NEW MOVEMENT</Text>
+            </Pressable>
 
-        <Pressable style={styles.finishBtnContainer} onPress={() => setShowSummary(true)}>
-          <Text style={styles.finishBtnText}>FINISH WORKOUT</Text>
-        </Pressable>
+            <Pressable style={styles.finishBtnContainer} onPress={() => setShowSummary(true)}>
+              <Text style={styles.finishBtnText}>FINISH WORKOUT</Text>
+            </Pressable>
+          </>
+        )}
       </ScrollView>
 
       <Modal visible={showStartModal} transparent animationType="fade">
