@@ -22,7 +22,16 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/logo.png",
+          "imageWidth": 300,
+          "imageHeight": 300
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

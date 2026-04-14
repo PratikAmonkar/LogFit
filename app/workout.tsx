@@ -338,10 +338,13 @@ export default function WorkoutScreen() {
             </Text>
 
             <View style={{ width: '100%', gap: 12 }}>
-              <AppButton label={isWorkoutActive ? "Resume Session" : "Start Now"} onPress={handleAccept} />
-              {isWorkoutActive && (
-                <AppButton label='Start New Workout' onPress={handleStartNew} />
-              )}
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <AppButton label={isWorkoutActive ? "Resume" : "Start Now"} style={{ flex: 1 }} onPress={handleAccept} />
+                {isWorkoutActive && (
+                  <AppButton label='Start New' style={{ flex: 1 }} onPress={handleStartNew} />
+                )}
+              </View>
+
               <Pressable style={styles.cancelLink} onPress={handleCancel}>
                 <Text style={styles.cancelLinkText}>Not yet, go back</Text>
               </Pressable>
@@ -467,6 +470,6 @@ const styles = StyleSheet.create({
   iconCircleLarge: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center' },
   resumeTitle: { fontSize: 22, fontWeight: '900', color: '#111', marginBottom: 10 },
   resumeSubtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 30, lineHeight: 22 },
-  cancelLink: { marginTop: 15, paddingVertical: 10 },
+  cancelLink: { paddingVertical: 10, alignItems: "center" },
   cancelLinkText: { color: '#888', fontSize: 13, fontWeight: '700' },
 });

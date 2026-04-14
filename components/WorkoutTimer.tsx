@@ -1,13 +1,10 @@
 import { useTimerStore } from '@/store/userTimerStore';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-    FadeInRight,
-    FadeOutRight,
-    useAnimatedStyle,
-    useSharedValue,
+import {
+    useSharedValue
 } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -15,6 +12,15 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export const WorkoutTimer = () => {
     const router = useRouter();
     const { workoutElapsed, isWorkoutActive, activeWorkoutId, activeRoutineName } = useTimerStore();
+    const [isReady, setIsReady] = useState(false);
+
+    useEffect(() => {
+        if (isWorkoutActive) {
+            const timer = setTimeout(() => setIsReady(true), 400);
+            return () => clearTimeout(timer);
+        } else {
+        }
+    }, [isWorkoutActive]);
 
     const translateY = useSharedValue(0);
     const context = useSharedValue({ y: 0 });
@@ -27,10 +33,6 @@ export const WorkoutTimer = () => {
             const newY = event.translationY + context.value.y;
             translateY.value = Math.max(-20, Math.min(newY, SCREEN_HEIGHT - 200));
         });
-
-    const animatedWrapperStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: translateY.value }]
-    }));
 
     if (!isWorkoutActive) return null;
 
@@ -54,20 +56,24 @@ export const WorkoutTimer = () => {
 
     return (
         <GestureDetector gesture={panGesture}>
-            <Animated.View
-                entering={FadeInRight}
-                exiting={FadeOutRight}
-                style={[styles.container, animatedWrapperStyle]}
+            <View
+                style={[styles.container,]}
             >
                 <Pressable
-                    style={styles.bubble}
+                    style={[
+                        styles.bubble,
+                        {
+                            shadowOpacity: isReady ? 0.2 : 0,
+                            elevation: isReady ? 12 : 0,
+                        }
+                    ]}
                     onPress={handleNavigate}
                 >
                     <View style={styles.content}>
                         <Text style={styles.timeText}>{formatTime(workoutElapsed)}</Text>
                     </View>
                 </Pressable>
-            </Animated.View>
+            </View>
         </GestureDetector>
     );
 };

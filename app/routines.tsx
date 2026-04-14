@@ -5,8 +5,8 @@ import { useRoutineStore } from '@/store/routineStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,68 +16,58 @@ const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 const QUICK_DURATIONS = ['30 min', '45 min', '60 min', '90 min'];
 
 const RoutineCard = ({ routine, index, onEdit, onStart, onDelete }: any) => {
-  const [isEntered, setIsEntered] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsEntered(true), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <Animated.View
       entering={FadeIn.delay(index * 50).duration(400)}
-      style={[
-        styles.card,
-        {
-          elevation: isEntered ? 2 : 0,
-          shadowOpacity: isEntered ? 0.04 : 0
-        }
-      ]}
+      style={styles.card}
     >
-      <View style={styles.cardHeaderRow}>
-        <Text style={styles.cardTitle}>{routine.name}</Text>
-        <Pressable onPress={() => onEdit(routine)} style={styles.editBtn}>
-          <Ionicons name="pencil-outline" size={18} color="#8b92a5" />
-        </Pressable>
+      <View style={styles.cardTopRow}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.cardTitle}>{routine.name}</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}>
+              <Ionicons name="calendar" size={12} color="#5C4AE4" />
+              <Text style={styles.badgeText}>{routine.days}</Text>
+            </View>
+            <View style={styles.badge}>
+              <Ionicons name="time" size={12} color="#5C4AE4" />
+              <Text style={styles.badgeText}>{routine.duration}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.actionsRow}>
+          <Pressable onPress={() => onEdit(routine)} style={styles.actionBtn}>
+            <Ionicons name="pencil" size={16} color="#8b92a5" />
+          </Pressable>
+          <Pressable onPress={() => {
+            if (routine.id) {
+              onDelete(routine.id)
+            }
+          }} style={styles.actionBtn}>
+            <Ionicons name="trash" size={16} color="#F87171" />
+          </Pressable>
+        </View>
       </View>
 
-      <View style={styles.metaRow}>
-        <View style={styles.badge}>
-          <Ionicons name="calendar-outline" size={12} color="#555" style={{ marginRight: 4 }} />
-          <Text style={styles.badgeText}>{routine.days}</Text>
-        </View>
-        <View style={styles.badge}>
-          <Ionicons name="time-outline" size={12} color="#555" style={{ marginRight: 4 }} />
-          <Text style={styles.badgeText}>{routine.duration}</Text>
-        </View>
-      </View>
-
-      <View style={styles.cardFooter}>
-        <Pressable style={styles.startBtn} onPress={() => onStart(routine)}>
-          <Text style={styles.startBtnText}>START ROUTINE</Text>
-          <Ionicons name="play" size={14} color="#fff" style={{ marginLeft: 6 }} />
-        </Pressable>
-        <Pressable onPress={() => {
-          if (routine.id) {
-            onDelete(routine.id)
-          }
-        }} style={styles.deleteBtn}>
-          <Ionicons name="trash-outline" size={20} color="#d94b4b" />
-        </Pressable>
-      </View>
+      {/* <Pressable style={styles.startBtn} onPress={() => onStart(routine)}>
+        <Text style={styles.startBtnText}>START ROUTINE</Text>
+        <Ionicons name="arrow-forward" size={16} color="#fff" />
+      </Pressable> */}
+      <AppButton label='Start Routine' onPress={() => onStart(routine)} />
     </Animated.View>
   );
 };
 
 export default function RoutinesScreen() {
   const router = useRouter();
+  const { height } = useWindowDimensions();
   const { getRoutines, data, addRoutine, updateRoutine, deleteRoutine, isLoading } = useRoutineStore()
   const insets = useSafeAreaInsets();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', days: '', duration: '' });
-  const [showPicker, setShowPicker] = useState(false);
 
   const renderBackdrop = useCallback(
     (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
@@ -93,14 +83,12 @@ export default function RoutinesScreen() {
   const openAddModal = () => {
     setEditingId(null);
     setForm({ name: '', days: '', duration: '' });
-    setShowPicker(false);
     bottomSheetModalRef.current?.present();
   };
 
   const openEditModal = (routine: DatabaseRoutine) => {
     setEditingId(routine.id!.toString());
     setForm(routine);
-    setShowPicker(false);
     bottomSheetModalRef.current?.present();
   };
 
@@ -215,8 +203,8 @@ export default function RoutinesScreen() {
 
       <BottomSheetModal
         ref={bottomSheetModalRef}
-        index={0}
-        snapPoints={['50%']}
+        enableDynamicSizing={true}
+        maxDynamicContentSize={height * 0.9}
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: '#fff', borderRadius: 24 }}
         handleIndicatorStyle={{ backgroundColor: '#ccc', width: 40 }}
@@ -252,7 +240,6 @@ export default function RoutinesScreen() {
                 key={d}
                 onPress={() => {
                   setForm({ ...form, duration: d });
-                  setShowPicker(false);
                 }}
                 style={[styles.dayChip, form.duration === d && styles.dayChipSelected]}
               >
@@ -261,46 +248,7 @@ export default function RoutinesScreen() {
                 </Text>
               </Pressable>
             ))}
-            <Pressable
-              onPress={() => setShowPicker(!showPicker)}
-              style={[styles.dayChip, showPicker && styles.dayChipSelected, { backgroundColor: '#f2f4f7' }]}
-            >
-              <Text style={[styles.dayChipText, showPicker && styles.dayChipTextSelected]}>
-                Custom...
-              </Text>
-            </Pressable>
           </View>
-
-          {showPicker && (
-            <View style={styles.pickerContainer}>
-              <View style={styles.pickerColumn}>
-                <Text style={styles.pickerLabel}>Hours</Text>
-                <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
-                  {HOURS.map(h => {
-                    const { h: currentH, m: currentM } = getDurationValues();
-                    return (
-                      <Pressable key={h} onPress={() => updateDuration(h, currentM)} style={[styles.pickerItem, currentH === h && styles.pickerItemActive]}>
-                        <Text style={[styles.pickerItemText, currentH === h && styles.pickerItemTextActive]}>{h}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-              <View style={styles.pickerColumn}>
-                <Text style={styles.pickerLabel}>Mins</Text>
-                <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
-                  {MINUTES.map(m => {
-                    const { h: currentH, m: currentM } = getDurationValues();
-                    return (
-                      <Pressable key={m} onPress={() => updateDuration(currentH, m)} style={[styles.pickerItem, currentM === m && styles.pickerItemActive]}>
-                        <Text style={[styles.pickerItemText, currentM === m && styles.pickerItemTextActive]}>{m}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            </View>
-          )}
           <View style={styles.modalActions}>
             <AppButton label='Cancel' style={{ flex: 1 }} textStyle={{ color: "#555" }} backgroundColor='#f2f4f7' onPress={() => bottomSheetModalRef.current?.dismiss()} />
             <AppButton label='Save' style={{ flex: 1 }} onPress={saveRoutine} />
@@ -319,17 +267,17 @@ const styles = StyleSheet.create({
   addIconBtn: { padding: 8, backgroundColor: '#EEF4FF', borderRadius: 8 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
   responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center', },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: '#f0f0f5' },
-  cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#111', flex: 1, paddingRight: 10 },
-  editBtn: { padding: 4 },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f4f7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
-  badgeText: { fontSize: 11, fontWeight: '600', color: '#555' },
-  cardFooter: { flexDirection: 'row', gap: 12 },
-  startBtn: { flex: 1, flexDirection: 'row', backgroundColor: '#5C4AE4', paddingVertical: 12, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  startBtnText: { color: '#fff', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
-  deleteBtn: { backgroundColor: '#fff0f0', width: 44, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9' },
+  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  titleContainer: { flex: 1, paddingRight: 12 },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a', marginBottom: 16 },
+  badgeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#eef2ff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, gap: 4 },
+  badgeText: { fontSize: 12, fontWeight: '700', color: '#4f46e5' },
+  actionsRow: { flexDirection: 'row', gap: 8 },
+  actionBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
+  startBtn: { backgroundColor: '#0f172a', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 16, gap: 8, marginTop: 20 },
+  startBtnText: { color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 1 },
   modalContent: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   modalTitle: { fontSize: 20, fontWeight: '800', marginBottom: 20 },
   label: { fontSize: 12, fontWeight: '700', color: '#555', marginBottom: 8 },

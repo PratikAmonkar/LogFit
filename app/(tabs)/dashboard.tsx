@@ -36,7 +36,7 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     if (!isLoading) {
-      const timer = setTimeout(() => setIsReady(true), 500);
+      const timer = setTimeout(() => setIsReady(true), 1200);
       return () => clearTimeout(timer);
     } else {
       setIsReady(false);
@@ -125,7 +125,6 @@ export default function DashboardScreen() {
           >
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.cardHeader}>MONTHLY CONSISTENCY</Text>
-              <Ionicons name="information-circle-outline" size={16} color="#8b92a5" />
             </View>
             <View style={styles.heatmapGrid}>
               {monthActivityData.map((item, i) => (
@@ -160,7 +159,7 @@ export default function DashboardScreen() {
                 }]}
                 onPress={() => router.push({
                   pathname: '/workout',
-                  params: { workoutId: lastWorkout.id, routineName: lastWorkout.title }
+                  params: { workoutId: lastWorkout.id, routineName: lastWorkout.title, viewOnly: 'true' }
                 })}
               >
                 <View style={styles.dateSection}>
