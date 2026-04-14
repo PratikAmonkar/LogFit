@@ -1,3 +1,4 @@
+import AppButton from '@/components/AppButton';
 import { DatabaseRoutine, RoutineRepository } from '@/services/routineRepository';
 import { WorkoutRepository } from '@/services/workoutRepository';
 import { useRoutineStore } from '@/store/routineStore';
@@ -200,14 +201,14 @@ export default function RoutinesScreen() {
           <Text style={styles.title}>My Workouts</Text>
         </View>
         <Pressable onPress={openAddModal} style={styles.addIconBtn}>
-          <Ionicons name="add" size={24} color="#0B63C6" />
+          <Ionicons name="add" size={24} color="#5C4AE4" />
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { flex: isLoading ? 1 : 0 }]} showsVerticalScrollIndicator={false}>
         {isLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 40 }}>
-            <ActivityIndicator size="large" color="#0B63C6" />
+            <ActivityIndicator size="large" color="#5C4AE4" />
           </View>
         ) : (
           <View style={styles.responsiveWrapper}>
@@ -216,11 +217,11 @@ export default function RoutinesScreen() {
                 <RoutineCard key={routine.id} routine={routine} index={index} onEdit={openEditModal} onStart={handleStartRoutine} onDelete={deleteRoutine} />
               ))
             ) : (
-              <View style={{ alignItems: 'center', marginTop: 100 }}>
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <Ionicons name="fitness-outline" size={60} color="#ccd2e3" />
                 <Text style={{ marginTop: 16, fontSize: 16, color: '#8b92a5', fontWeight: '600' }}>No routines created yet.</Text>
                 <Pressable onPress={openAddModal} style={{ marginTop: 10 }}>
-                  <Text style={{ color: '#0B63C6', fontWeight: '700' }}>Create your first routine</Text>
+                  <Text style={{ color: '#5C4AE4', fontWeight: '700' }}>Create your first routine</Text>
                 </Pressable>
               </View>
             )}
@@ -317,14 +318,9 @@ export default function RoutinesScreen() {
               </View>
             </View>
           )}
-
           <View style={styles.modalActions}>
-            <Pressable style={styles.cancelBtn} onPress={() => bottomSheetModalRef.current?.dismiss()}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </Pressable>
-            <Pressable style={styles.saveBtn} onPress={saveRoutine}>
-              <Text style={styles.saveBtnText}>Save</Text>
-            </Pressable>
+            <AppButton label='Cancel' style={{ flex: 1 }} textStyle={{ color: "#555" }} backgroundColor='#f2f4f7' onPress={() => bottomSheetModalRef.current?.dismiss()} />
+            <AppButton label='Save' style={{ flex: 1 }} onPress={saveRoutine} />
           </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
@@ -338,9 +334,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20 },
   backBtn: { marginRight: 16 },
   title: { fontSize: 24, fontWeight: '800', color: '#111' },
-  addIconBtn: { padding: 8, backgroundColor: '#e6f0fa', borderRadius: 8 },
+  addIconBtn: { padding: 8, backgroundColor: '#EEF4FF', borderRadius: 8 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
-  responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center' },
+  responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center', },
   card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: '#f0f0f5' },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
   cardTitle: { fontSize: 18, fontWeight: '700', color: '#111', flex: 1, paddingRight: 10 },
@@ -349,7 +345,7 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f4f7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
   badgeText: { fontSize: 11, fontWeight: '600', color: '#555' },
   cardFooter: { flexDirection: 'row', gap: 12 },
-  startBtn: { flex: 1, flexDirection: 'row', backgroundColor: '#0B63C6', paddingVertical: 12, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  startBtn: { flex: 1, flexDirection: 'row', backgroundColor: '#5C4AE4', paddingVertical: 12, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   startBtnText: { color: '#fff', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
   deleteBtn: { backgroundColor: '#fff0f0', width: 44, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
 
@@ -359,9 +355,9 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#f2f4f7', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, marginBottom: 16 },
   daysContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
   dayChip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: '#f2f4f7', borderWidth: 1.5, borderColor: '#f2f4f7' },
-  dayChipSelected: { backgroundColor: '#eff6ff', borderColor: '#0B63C6' },
+  dayChipSelected: { backgroundColor: '#eff6ff', borderColor: '#5C4AE4' },
   dayChipText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
-  dayChipTextSelected: { color: '#0B63C6' },
+  dayChipTextSelected: { color: '#5C4AE4' },
   pickerTrigger: { backgroundColor: '#f2f4f7', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   pickerTriggerText: { fontSize: 15, color: '#111', fontWeight: '500' },
   pickerContainer: { flexDirection: 'row', backgroundColor: '#f8f9fc', borderRadius: 12, padding: 12, marginBottom: 16, gap: 12 },
@@ -371,11 +367,11 @@ const styles = StyleSheet.create({
   pickerItem: { paddingVertical: 8, width: '100%', alignItems: 'center', borderRadius: 6 },
   pickerItemActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
   pickerItemText: { fontSize: 16, fontWeight: '500', color: '#8b92a5' },
-  pickerItemTextActive: { color: '#0B63C6', fontWeight: '700' },
+  pickerItemTextActive: { color: '#5C4AE4', fontWeight: '700' },
   modalActions: { flexDirection: 'row', marginTop: 10, gap: 12 },
   cancelBtn: { flex: 1, backgroundColor: '#f2f4f7', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
   cancelBtnText: { fontSize: 15, fontWeight: '700', color: '#555' },
-  saveBtn: { flex: 1, backgroundColor: '#0B63C6', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  saveBtn: { flex: 1, backgroundColor: '#5C4AE4', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
   saveBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 
   banner: {

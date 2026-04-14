@@ -1,3 +1,4 @@
+import AppButton from '@/components/AppButton';
 import { EXERCISE_NAMES } from '@/constants/exercise_list';
 import { RoutineRepository } from '@/services/routineRepository';
 import { WorkoutRepository } from '@/services/workoutRepository';
@@ -20,24 +21,15 @@ export default function ExercisesScreen() {
 
     const handleConfirm = async () => {
         if (selected.length === 0) return alert("Select at least one exercise");
-
-        // 1. Save Template
         await RoutineRepository.addExercisesToRoutine(Number(routineId), selected);
-
-        // 2. Check if already started today
         const existing = await WorkoutRepository.getTodayWorkout(routineName as string);
         if (existing) {
             return router.replace({ pathname: '/workout', params: { workoutId: existing.id, routineName } });
         }
-
-        // 3. Create the first session
         const newId = await WorkoutRepository.createWorkout(routineName as string);
-
-        // 4. Clone exercises to session
         for (const name of selected) {
             await WorkoutRepository.addExerciseToWorkout(newId, name);
         }
-
         router.replace({ pathname: '/workout', params: { workoutId: newId, routineName } });
     };
 
@@ -71,7 +63,7 @@ export default function ExercisesScreen() {
                 <FlatList
                     data={filteredExercises}
                     contentContainerStyle={[
-                        styles.listContainer, 
+                        styles.listContainer,
                         { paddingBottom: insets.bottom + 100 }
                     ]}
                     renderItem={({ item }) => {
@@ -82,13 +74,13 @@ export default function ExercisesScreen() {
                                 onPress={() => toggleExercise(item)}
                             >
                                 <View style={[styles.exerciseIcon, isSelected && styles.selectedIcon]}>
-                                    <Ionicons name="barbell-outline" size={20} color={isSelected ? "#fff" : "#0B63C6"} />
+                                    <Ionicons name="barbell-outline" size={20} color={isSelected ? "#fff" : "#5C4AE4"} />
                                 </View>
                                 <Text style={[styles.exerciseItemText, isSelected && styles.selectedText]}>{item}</Text>
                                 <Ionicons
                                     name={isSelected ? "checkbox" : "square-outline"}
                                     size={22}
-                                    color={isSelected ? "#0B63C6" : "#ccc"}
+                                    color={isSelected ? "#0B63C6" : "#5C4AE4"}
                                 />
                             </Pressable>
                         );
@@ -96,11 +88,8 @@ export default function ExercisesScreen() {
                     keyExtractor={(item) => item}
                     showsVerticalScrollIndicator={false}
                 />
-
                 <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
-                    <Pressable style={styles.btn} onPress={handleConfirm}>
-                        <Text style={styles.btnText}>CONFIRM & START ({selected.length})</Text>
-                    </Pressable>
+                    <AppButton label={`Confirm & Start ${selected.length}`} onPress={handleConfirm} />
                 </View>
             </SafeAreaView>
         </View>
@@ -127,7 +116,7 @@ const styles = StyleSheet.create({
         marginBottom: 10
     },
     selectedItem: { backgroundColor: '#e6f0fa', borderColor: '#0B63C6' },
-    exerciseIcon: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#e6f0fa', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+    exerciseIcon: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
     selectedIcon: { backgroundColor: '#0B63C6' },
     exerciseItemText: { flex: 1, fontSize: 16, fontWeight: '700', color: '#333' },
     selectedText: { color: '#0B63C6' },

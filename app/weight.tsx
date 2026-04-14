@@ -1,3 +1,4 @@
+import AppButton from '@/components/AppButton';
 import { useUserStore } from '@/store/userStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -135,12 +136,13 @@ export default function WeightScreen() {
         </View>
 
         <View style={styles.footer}>
-          <Pressable
+          {/* <Pressable
             style={styles.button}
             onPress={handlePress}
           >
             <Text style={styles.buttonText}>{isEdit ? 'Save Changes' : 'Next'}</Text>
-          </Pressable>
+          </Pressable> */}
+          <AppButton label={isEdit ? 'Save Changes' : 'Next'} onPress={handlePress} />
         </View>
       </Animated.View>
     </SafeAreaView>

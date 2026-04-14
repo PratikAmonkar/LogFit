@@ -1,5 +1,4 @@
-import { RestTimerOverlay } from '@/components/RestTimerOverlay';
-import { WorkoutTimer } from '@/components/WorkoutTimer';
+import AppButton from '@/components/AppButton';
 import { EXERCISE_NAMES } from '@/constants/exercise_list';
 import { DatabaseExercise, DatabaseSet, WorkoutRepository } from '@/services/workoutRepository';
 import { useTimerStore } from '@/store/userTimerStore';
@@ -311,13 +310,12 @@ export default function WorkoutScreen() {
         {!isViewOnly && (
           <>
             <Pressable style={styles.addBtn} onPress={() => bottomSheetModalRef.current?.present()}>
-              <View style={styles.addCircle}><Ionicons name="add" size={20} color="#555" /></View>
+              <View style={styles.addCircle}><Ionicons name="add" size={20} color="#5C4AE4" /></View>
               <Text style={styles.addBtnText}>INJECT NEW MOVEMENT</Text>
             </Pressable>
 
-            <Pressable style={styles.finishBtnContainer} onPress={() => setShowSummary(true)}>
-              <Text style={styles.finishBtnText}>FINISH WORKOUT</Text>
-            </Pressable>
+
+            <AppButton label="Finish Workout" onPress={() => setShowSummary(true)} />
           </>
         )}
       </ScrollView>
@@ -329,7 +327,7 @@ export default function WorkoutScreen() {
           <Animated.View entering={ZoomIn.duration(400)} style={styles.resumeCard}>
             <View style={styles.resumeIconOuter}>
               <View style={styles.iconCircleLarge}>
-                <Ionicons name={isWorkoutActive ? "refresh-circle" : "play"} size={42} color="#0B63C6" />
+                <Ionicons name={isWorkoutActive ? "refresh-circle" : "play"} size={42} color="#5C4AE4" />
               </View>
             </View>
 
@@ -344,16 +342,18 @@ export default function WorkoutScreen() {
             </Text>
 
             <View style={{ width: '100%', gap: 12 }}>
-              <Pressable style={styles.resumeBtn} onPress={handleAccept}>
+              {/* <Pressable style={styles.resumeBtn} onPress={handleAccept}>
                 <Text style={styles.resumeBtnText}>
                   {isWorkoutActive ? "RESUME SESSION" : "START NOW"}
                 </Text>
-              </Pressable>
+              </Pressable> */}
+              <AppButton label={isWorkoutActive ? "Resume Session" : "Start Now"} onPress={handleAccept} />
 
               {isWorkoutActive && (
-                <Pressable style={styles.startNewBtn} onPress={handleStartNew}>
-                  <Text style={styles.startNewBtnText}>START NEW WORKOUT</Text>
-                </Pressable>
+                // <Pressable style={styles.startNewBtn} onPress={handleStartNew}>
+                //   <Text style={styles.startNewBtnText}>START NEW WORKOUT</Text>
+                // </Pressable>
+                <AppButton label='Start New Workout' onPress={handleStartNew} />
               )}
 
               <Pressable style={styles.cancelLink} onPress={handleCancel}>
@@ -386,9 +386,10 @@ export default function WorkoutScreen() {
                 <Text style={styles.statLabel}>EXERCISES</Text>
               </View>
             </View>
-            <Pressable style={styles.doneBtn} onPress={confirmFinish}>
+            {/* <Pressable style={styles.doneBtn} onPress={confirmFinish}>
               <Text style={styles.doneBtnText}>DONE</Text>
-            </Pressable>
+            </Pressable> */}
+            <AppButton label='Done' onPress={confirmFinish} style={{ width: '100%', }} />
           </Animated.View>
         </View>
       </Modal>
@@ -420,9 +421,9 @@ export default function WorkoutScreen() {
           }
           renderItem={({ item }) => (
             <Pressable style={[styles.exerciseItem, { marginHorizontal: 20 }]} onPress={() => handleAddExercise(item)}>
-              <View style={styles.exerciseIcon}><Ionicons name="barbell-outline" size={20} color="#0B63C6" /></View>
+              <View style={styles.exerciseIcon}><Ionicons name="barbell-outline" size={20} color="#5C4AE4" /></View>
               <Text style={styles.exerciseItemText}>{item}</Text>
-              <Ionicons name="chevron-forward" size={18} color="#ccc" />
+              <Ionicons name="chevron-forward" size={18} color="#5C4AE4" />
             </Pressable>
           )}
           contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
@@ -439,10 +440,10 @@ const styles = StyleSheet.create({
   backBtn: { padding: 10, borderRadius: 12 },
   header: { marginBottom: 24 },
   title: { fontSize: 26, fontWeight: '800', color: '#111', width: '100%', lineHeight: 32 },
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e8eaf0', borderStyle: 'dashed' },
+  card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 20 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  exerciseIndex: { fontSize: 12, fontWeight: '700', color: '#0B63C6', marginLeft: 4, marginRight: 8 },
+  exerciseIndex: { fontSize: 12, fontWeight: '700', color: '#5C4AE4', marginLeft: 4, marginRight: 8 },
   exerciseName: { fontSize: 14, fontWeight: '800', color: '#111', flex: 1 },
   iconBtn: { padding: 4 },
   setsHeader: { flexDirection: 'row', paddingHorizontal: 4, marginBottom: 8, alignItems: 'center' },
@@ -455,9 +456,9 @@ const styles = StyleSheet.create({
   checkBtnComplete: { backgroundColor: '#4caf50' },
   minusBtn: { width: 20, marginRight: 10, justifyContent: 'center', alignItems: 'center' },
   addSetBtn: { alignSelf: 'center', paddingVertical: 10, marginTop: 4 },
-  addSetBtnText: { fontSize: 12, fontWeight: '700', color: '#0B63C6' },
-  addBtn: { alignItems: 'center', marginTop: 10, marginBottom: 20, padding: 20, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e8eaf0', borderStyle: 'dashed' },
-  addCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f2f4f7', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  addSetBtnText: { fontSize: 12, fontWeight: '700', color: '#5C4AE4' },
+  addBtn: { alignItems: 'center', marginTop: 10, marginBottom: 20, padding: 20, borderRadius: 12, backgroundColor: '#fff' },
+  addCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   addBtnText: { fontSize: 11, fontWeight: '800', color: '#333', letterSpacing: 1 },
   finishBtnContainer: { backgroundColor: '#0B63C6', padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 10 },
   finishBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
@@ -468,7 +469,7 @@ const styles = StyleSheet.create({
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f4f7', paddingHorizontal: 16, borderRadius: 12, marginBottom: 20 },
   searchInput: { flex: 1, paddingVertical: 12, marginLeft: 10, fontSize: 15, fontWeight: '600', color: '#111' },
   exerciseItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f5' },
-  exerciseIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#e6f0fa', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  exerciseIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   exerciseItemText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#333' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   summaryCard: { backgroundColor: '#fff', width: '100%', borderRadius: 24, padding: 32, alignItems: 'center', zIndex: 10 },
@@ -487,7 +488,7 @@ const styles = StyleSheet.create({
   // Resume Modal Styles
   resumeCard: { backgroundColor: 'rgba(255, 255, 255, 0.98)', width: '100%', borderRadius: 32, padding: 32, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 10 },
   resumeIconOuter: { marginBottom: 20 },
-  iconCircleLarge: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#e6f0fa', justifyContent: 'center', alignItems: 'center' },
+  iconCircleLarge: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center' },
   resumeTitle: { fontSize: 22, fontWeight: '900', color: '#111', marginBottom: 10 },
   resumeSubtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 30, lineHeight: 22 },
   resumeBtn: { backgroundColor: '#0B63C6', width: '100%', paddingVertical: 18, borderRadius: 18, alignItems: 'center' },

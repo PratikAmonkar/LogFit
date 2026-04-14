@@ -1,3 +1,4 @@
+import AppButton from '@/components/AppButton';
 import { useUserStore } from '@/store/userStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -132,7 +133,6 @@ export default function HeightScreen() {
                   const step = unit === 'cm' ? 1 : 0.1;
                   const val = (Math.round(y / 20) * step) + offset;
 
-                  // Precision check for ft
                   const finalVal = unit === 'cm' ? Math.round(val) : parseFloat(val.toFixed(1));
 
                   const max = unit === 'cm' ? 250 : 8.5;
@@ -161,17 +161,8 @@ export default function HeightScreen() {
               <View style={styles.pointer} />
             </View>
           </View>
-
         </View>
-
-        <View style={styles.footer}>
-          <Pressable
-            style={styles.button}
-            onPress={handlePress}
-          >
-            <Text style={styles.buttonText}>{isEdit ? 'Save Changes' : 'Next'}</Text>
-          </Pressable>
-        </View>
+        <AppButton label={isEdit ? 'Save Changes' : 'Next'} onPress={handlePress} />
       </Animated.View>
     </SafeAreaView>
   );

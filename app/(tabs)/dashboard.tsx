@@ -98,11 +98,6 @@ export default function DashboardScreen() {
               <Text style={styles.dateLabel}>{formattedDate}</Text>
               <Text style={styles.greeting}>Hey Hero!</Text>
             </View>
-            <Pressable style={styles.profileBtn}>
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>PA</Text>
-              </View>
-            </Pressable>
           </Animated.View>
 
           {/* Activity Overiew Grid */}
@@ -154,7 +149,7 @@ export default function DashboardScreen() {
                     {
                       width: boxSize,
                       height: boxSize,
-                      backgroundColor: item.active ? '#0B63C6' : '#F8FAFC',
+                      backgroundColor: item.active ? '#5C4AE4' : '#F8FAFC',
                       borderWidth: item.active ? 0 : 1,
                       borderColor: '#F1F5F9'
                     }
@@ -262,7 +257,7 @@ const styles = StyleSheet.create({
   heatmapDayText: { fontSize: 11, fontWeight: '800', textAlign: 'center' },
 
   fabContainer: { position: 'absolute', bottom: 30, right: 30 },
-  fab: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#0B63C6', justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#0B63C6', shadowOpacity: 0.3, shadowRadius: 10 },
+  fab: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#5C4AE4', justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10 },
 
   // History style card for Dashboard - Flat version
   historyStyleCard: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#f1f5f9' },

@@ -13,11 +13,9 @@ export default function SettingsScreen() {
   const router = useRouter();
 
   const profileSheetRef = useRef<BottomSheetModal>(null);
-  const exportSheetRef = useRef<BottomSheetModal>(null);
 
   const { isLoading, data, updateProfile } = useUserStore();
 
-  // UI States for Data Management
   const [isExportingFull, setIsExportingFull] = useState(false);
   const [isImportingFull, setIsImportingFull] = useState(false);
   const [isExportingWorkouts, setIsExportingWorkouts] = useState(false);
@@ -154,7 +152,7 @@ export default function SettingsScreen() {
 
           <View style={styles.section}>
             <View style={styles.row}>
-              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="scale-outline" size={20} color="#0B63C6" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="scale-outline" size={20} color="#5C4AE4" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Weight Unit</Text>
               </View>
@@ -171,7 +169,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <View style={styles.row}>
-              <View style={[styles.iconBox, { backgroundColor: '#F0FFF4' }]}><Ionicons name="body-outline" size={20} color="#22C55E" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="body-outline" size={20} color="#5C4AE4" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Height Unit</Text>
               </View>
@@ -186,43 +184,42 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.divider} />
             <Pressable style={styles.row} onPress={() => router.push({ pathname: '/weight', params: { mode: 'edit', initialWeight: data?.weight?.toString(), initialUnit: data?.weight_unit } })}>
-              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="scale-outline" size={20} color="#0B63C6" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="scale-outline" size={20} color="#5C4AE4" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Weight</Text>
                 <Text style={styles.rowSubtitle}>{data?.weight} {data?.weight_unit}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+              <Ionicons name="chevron-forward" size={20} color="#5C4AE4" />
             </Pressable>
             <View style={styles.divider} />
             <Pressable style={styles.row} onPress={() => router.push({ pathname: '/height', params: { mode: 'edit', initialHeight: data?.height?.toString(), initialUnit: data?.height_unit, gender: data?.gender } })}>
-              <View style={[styles.iconBox, { backgroundColor: '#F0FFF4' }]}><Ionicons name="body-outline" size={20} color="#22C55E" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="body-outline" size={20} color="#5C4AE4" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Height</Text>
                 <Text style={styles.rowSubtitle}>{data?.height} {data?.height_unit}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+              <Ionicons name="chevron-forward" size={20} color="#5C4AE4" />
             </Pressable>
 
             <View style={styles.divider} />
 
             <Pressable style={styles.row} onPress={() => router.push({ pathname: '/schedule', params: { mode: 'edit', time: data?.gym_time, days: data?.gym_days } })}>
-              <View style={[styles.iconBox, { backgroundColor: '#FFFBEB' }]}><Ionicons name="calendar-outline" size={20} color="#F59E0B" /></View>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="calendar-outline" size={20} color="#5C4AE4" /></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowText}>Gym Schedule</Text>
                 <Text style={styles.rowSubtitle}>{data?.gym_time} • {data?.gym_days}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+              <Ionicons name="chevron-forward" size={20} color="#5C4AE4" />
             </Pressable>
           </View>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>DATA MANAGEMENT</Text>
           </View>
 
-          {/* Full Backup Card */}
           <View style={styles.backupCard}>
             <View style={styles.backupHeader}>
               <View style={[styles.backupIcon, { backgroundColor: '#EEF4FF' }]}>
-                <Ionicons name="shield-checkmark" size={24} color="#0B63C6" />
+                <Ionicons name="shield-checkmark" size={24} color="#5C4AE4" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.backupTitle}>Full Application Vault</Text>
@@ -235,9 +232,9 @@ export default function SettingsScreen() {
                 onPress={triggerExportFull}
                 disabled={isExportingFull}
               >
-                {isExportingFull ? <ActivityIndicator size="small" color="#0B63C6" /> : (
+                {isExportingFull ? <ActivityIndicator size="small" color="#5C4AE4" /> : (
                   <>
-                    <Ionicons name="share-outline" size={18} color="#0B63C6" />
+                    <Ionicons name="share-outline" size={18} color="#5C4AE4" />
                     <Text style={styles.actionBtnText}>Export All</Text>
                   </>
                 )}
@@ -248,9 +245,9 @@ export default function SettingsScreen() {
                 onPress={triggerImportFull}
                 disabled={isImportingFull}
               >
-                {isImportingFull ? <ActivityIndicator size="small" color="#0B63C6" /> : (
+                {isImportingFull ? <ActivityIndicator size="small" color="#5C4AE4" /> : (
                   <>
-                    <Ionicons name="download-outline" size={18} color="#0B63C6" />
+                    <Ionicons name="download-outline" size={18} color="#5C4AE4" />
                     <Text style={styles.actionBtnText}>Import All</Text>
                   </>
                 )}
@@ -258,11 +255,10 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Workout Only Card */}
           <View style={styles.backupCard}>
             <View style={styles.backupHeader}>
-              <View style={[styles.backupIcon, { backgroundColor: '#F0FFF4' }]}>
-                <Ionicons name="barbell" size={24} color="#22C55E" />
+              <View style={[styles.backupIcon, { backgroundColor: '#EEF4FF' }]}>
+                <Ionicons name="barbell" size={24} color="#5C4AE4" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.backupTitle}>Workout Portability</Text>
@@ -275,10 +271,10 @@ export default function SettingsScreen() {
                 onPress={triggerExportWorkouts}
                 disabled={isExportingWorkouts}
               >
-                {isExportingWorkouts ? <ActivityIndicator size="small" color="#22C55E" /> : (
+                {isExportingWorkouts ? <ActivityIndicator size="small" color="#5C4AE4" /> : (
                   <>
-                    <Ionicons name="share-outline" size={18} color="#22C55E" />
-                    <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Export</Text>
+                    <Ionicons name="share-outline" size={18} color="#5C4AE4" />
+                    <Text style={[styles.actionBtnText, { color: '#5C4AE4' }]}>Export</Text>
                   </>
                 )}
               </Pressable>
@@ -288,10 +284,10 @@ export default function SettingsScreen() {
                 onPress={triggerImportWorkouts}
                 disabled={isImportingWorkouts}
               >
-                {isImportingWorkouts ? <ActivityIndicator size="small" color="#22C55E" /> : (
+                {isImportingWorkouts ? <ActivityIndicator size="small" color="#5C4AE4" /> : (
                   <>
-                    <Ionicons name="download-outline" size={18} color="#22C55E" />
-                    <Text style={[styles.actionBtnText, { color: '#22C55E' }]}>Import</Text>
+                    <Ionicons name="download-outline" size={18} color="#5C4AE4" />
+                    <Text style={[styles.actionBtnText, { color: '#5C4AE4' }]}>Import</Text>
                   </>
                 )}
               </Pressable>
@@ -300,13 +296,12 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* Confirmation Modal */}
       <Modal visible={showConfirm} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
           <View style={styles.confirmBox}>
             <View style={styles.statusCircle}>
-              <Ionicons name="shield-checkmark-outline" size={32} color="#0B63C6" />
+              <Ionicons name="shield-checkmark-outline" size={32} color="#5C4AE4" />
             </View>
             <Text style={styles.confirmTitle}>{confirmConfig.title}</Text>
             <Text style={styles.confirmDesc}>{confirmConfig.desc}</Text>
@@ -322,18 +317,17 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      {/* Clean Success Modal (Gray/Black Theme) */}
       <Modal visible={showSuccess} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
           <View style={styles.successCard}>
-            <View style={[styles.statusCircle, { backgroundColor: '#f2f4f7' }]}>
-              <Ionicons name="checkmark-circle" size={36} color="#334155" />
+            <View style={[styles.statusCircle, { backgroundColor: '#EEF4FF' }]}>
+              <Ionicons name="checkmark-circle" size={36} color="#5C4AE4" />
             </View>
             <Text style={styles.confirmTitle}>Process Complete!</Text>
             <Text style={styles.confirmDesc}>Your data has been successfully processed and secured.</Text>
             <View style={styles.confirmActions}>
-              <Pressable style={[styles.primaryConfirmBtn, { backgroundColor: '#0B63C6', width: '100%' }]} onPress={() => setShowSuccess(false)}>
+              <Pressable style={styles.primaryConfirmBtn} onPress={() => { setShowSuccess(false) }}>
                 <Text style={styles.primaryConfirmBtnText}>Done</Text>
               </Pressable>
             </View>
@@ -341,7 +335,6 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      {/* Error Modal */}
       <Modal visible={showError} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
@@ -352,7 +345,7 @@ export default function SettingsScreen() {
             <Text style={[styles.confirmTitle, { color: '#DC2626' }]}>Something Went Wrong</Text>
             <Text style={styles.confirmDesc}>{errorMessage}</Text>
             <View style={styles.confirmActions}>
-              <Pressable style={[styles.primaryConfirmBtn, { backgroundColor: '#DC2626', width: '100%' }]} onPress={() => setShowError(false)}>
+              <Pressable style={[styles.primaryConfirmBtn, { backgroundColor: '#DC2626' }]} onPress={() => { setShowError(false) }}>
                 <Text style={styles.primaryConfirmBtnText}>Dismiss</Text>
               </Pressable>
             </View>
@@ -444,32 +437,32 @@ const styles = StyleSheet.create({
   backupDesc: { fontSize: 12, color: '#666', lineHeight: 18 },
   backupActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#f1f5f9', backgroundColor: '#fdfdfe' },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
-  actionBtnText: { fontSize: 13, fontWeight: '800', color: '#0B63C6' },
+  actionBtnText: { fontSize: 13, fontWeight: '800', color: '#5C4AE4' },
   vDivider: { width: 1, backgroundColor: '#f1f5f9' },
 
   toggleGroup: { flexDirection: 'row', backgroundColor: '#f2f4f7', borderRadius: 8, padding: 4 },
   toggleBtn: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 6 },
   toggleActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
   toggleText: { fontSize: 13, fontWeight: '700', color: '#888' },
-  toggleActiveText: { color: '#0B63C6' },
+  toggleActiveText: { color: '#5C4AE4' },
 
   // Confirmation Modal Styles
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
-  confirmBox: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center' },
+  confirmBox: { width: '85%', backgroundColor: '#fff', borderRadius: 28, paddingVertical: 24, paddingHorizontal: 16, alignItems: 'center' },
   statusCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   confirmTitle: { fontSize: 20, fontWeight: '900', color: '#111', marginBottom: 8 },
   confirmDesc: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-  confirmActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  confirmActions: { flexDirection: 'row', alignItems: 'center', gap: 20 },
   cancelLink: { paddingVertical: 12, paddingHorizontal: 20 },
   cancelLinkText: { fontSize: 15, fontWeight: '700', color: '#666' },
-  primaryConfirmBtn: { backgroundColor: '#0B63C6', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
+  primaryConfirmBtn: { backgroundColor: '#5C4AE4', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
   primaryConfirmBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
 
   // Success Dialog Styles (Gray/Black Theme)
   successCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f5', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
 
   // Error Dialog Styles
-  errorCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#FEE2E2', elevation: 12, shadowColor: '#DC2626', shadowOpacity: 0.1, shadowRadius: 20 },
+  errorCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#FEE2E2', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
 
   modalContent: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   modalTitle: { fontSize: 22, fontWeight: '800', marginBottom: 6 },

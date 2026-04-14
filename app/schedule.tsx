@@ -1,3 +1,4 @@
+import AppButton from '@/components/AppButton';
 import { StorageRepository } from '@/services/storageRepository';
 import { UserRepository } from '@/services/userRepository';
 import { useUserStore } from '@/store/userStore';
@@ -20,7 +21,7 @@ const DAYS = [
 export default function ScheduleScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { isLoading, updateProfile, loadProfile } = useUserStore()
+  const { updateProfile, loadProfile } = useUserStore()
   const { gender, weight, height, weightUnit, heightUnit, mode, time, days } = useLocalSearchParams();
   const initialDays = days ? (days as string).split(', ') : ['M', 'T', 'W', 'Th', 'F', 'S'];
   const [selectedDays, setSelectedDays] = useState<string[]>(initialDays);
@@ -96,13 +97,14 @@ export default function ScheduleScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24 }}>
-        {isEdit && (
+      {isEdit && (
+        <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24 }}>
+
           <Pressable onPress={() => router.back()} style={{ padding: 10, paddingLeft: 0 }}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </Pressable>
-        )}
-      </View>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)}>
@@ -137,21 +139,21 @@ export default function ScheduleScreen() {
             <View style={styles.timeInputs}>
               <View style={styles.timeBox}>
                 <Pressable onPress={() => setHour(h => h === 12 ? 1 : h + 1)} style={styles.arrow}>
-                  <Ionicons name="chevron-up" size={20} color="#0B63C6" />
+                  <Ionicons name="chevron-up" size={20} color="#5C4AE4" />
                 </Pressable>
                 <Text style={styles.timeVal}>{hour < 10 ? `0${hour}` : hour}</Text>
                 <Pressable onPress={() => setHour(h => h === 1 ? 12 : h - 1)} style={styles.arrow}>
-                  <Ionicons name="chevron-down" size={20} color="#0B63C6" />
+                  <Ionicons name="chevron-down" size={20} color="#5C4AE4" />
                 </Pressable>
               </View>
               <Text style={styles.colon}>:</Text>
               <View style={styles.timeBox}>
                 <Pressable onPress={() => setMinute(m => m === 55 ? 0 : m + 5)} style={styles.arrow}>
-                  <Ionicons name="chevron-up" size={20} color="#0B63C6" />
+                  <Ionicons name="chevron-up" size={20} color="#5C4AE4" />
                 </Pressable>
                 <Text style={styles.timeVal}>{minute < 10 ? `0${minute}` : minute}</Text>
                 <Pressable onPress={() => setMinute(m => m === 0 ? 55 : m - 5)} style={styles.arrow}>
-                  <Ionicons name="chevron-down" size={20} color="#0B63C6" />
+                  <Ionicons name="chevron-down" size={20} color="#5C4AE4" />
                 </Pressable>
               </View>
             </View>
@@ -168,11 +170,8 @@ export default function ScheduleScreen() {
           </View>
         </Animated.View>
       </ScrollView>
-
       <View style={styles.footer}>
-        <Pressable style={styles.button} onPress={handleFinish}>
-          <Text style={styles.buttonText}>FINISH</Text>
-        </Pressable>
+        <AppButton label="Finish" onPress={handleFinish} />
       </View>
     </SafeAreaView>
   );
@@ -190,7 +189,7 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 12, fontWeight: '800', color: '#8b92a5', letterSpacing: 2, marginBottom: 20 },
   daysGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   dayCircle: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#f2f4f7', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fcfdfe' },
-  dayCircleActive: { backgroundColor: '#0B63C6', borderColor: '#0B63C6' },
+  dayCircleActive: { backgroundColor: '#5C4AE4', borderColor: '#5C4AE4' },
   dayText: { fontSize: 15, fontWeight: '700', color: '#555' },
   dayTextActive: { color: '#fff' },
   hintText: { fontSize: 13, color: '#8b92a5', fontWeight: '600', marginTop: 8 },
@@ -201,7 +200,7 @@ const styles = StyleSheet.create({
   timeVal: { fontSize: 36, fontWeight: '900', color: '#111', marginVertical: 4, width: 60, textAlign: 'center' },
   colon: { fontSize: 32, fontWeight: '800', color: '#111', marginHorizontal: 8, marginTop: 16 },
   periodToggle: { width: 100, height: 50, backgroundColor: '#fff', borderRadius: 25, flexDirection: 'row', padding: 4, position: 'relative', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  periodSlider: { position: 'absolute', top: 4, left: 4, width: 42, height: 42, borderRadius: 21, backgroundColor: '#0B63C6' },
+  periodSlider: { position: 'absolute', top: 4, left: 4, width: 42, height: 42, borderRadius: 21, backgroundColor: '#5C4AE4' },
   periodOption: { flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
   periodText: { fontSize: 13, fontWeight: '800', color: '#8b92a5' },
   periodTextActive: { color: '#fff' },

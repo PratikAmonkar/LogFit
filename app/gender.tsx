@@ -1,3 +1,4 @@
+import AppButton from '@/components/AppButton';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -38,16 +39,7 @@ export default function GenderScreen() {
             <Text style={styles.cardText}>Female</Text>
           </Pressable>
         </View>
-
-        <View style={styles.footer}>
-          <Pressable
-            style={[styles.button, !gender && styles.buttonDisabled]}
-            disabled={!gender}
-            onPress={() => router.push({ pathname: '/weight', params: { gender } })}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </Pressable>
-        </View>
+        <AppButton label='Next' onPress={() => router.push({ pathname: '/weight', params: { gender } })} disabled={!gender} />
       </Animated.View>
     </SafeAreaView>
   );

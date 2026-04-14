@@ -93,9 +93,6 @@ export default function HistoryScreen() {
             </Pressable>
           ))}
         </View>
-        <Pressable style={styles.filterBtn} onPress={() => router.push('/routines')}>
-          <Ionicons name="list" size={20} color="#333" />
-        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -109,8 +106,8 @@ export default function HistoryScreen() {
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={48} color="#ccc" />
             <Text style={styles.emptyText}>
-              {activeTab === 'DAILY' 
-                ? 'No workout history yet.' 
+              {activeTab === 'DAILY'
+                ? 'No workout history yet.'
                 : `No workouts found for this ${activeTab.toLowerCase().replace('ly', '')}.`}
             </Text>
             <Pressable style={styles.startBtn} onPress={() => router.push('/routines')}>
@@ -197,7 +194,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 6,
   },
-  activeTab: { backgroundColor: '#0B63C6' },
+  activeTab: { backgroundColor: '#5C4AE4' },
   tabText: { fontSize: 13, fontWeight: '700', color: '#555' },
   activeTabText: { color: '#fff' },
   filterBtn: {
@@ -258,6 +255,6 @@ const styles = StyleSheet.create({
   statBox: { marginRight: 24, marginBottom: 4 },
   statLabel: { fontSize: 10, color: '#888', fontWeight: '600', marginBottom: 2 },
   statValue: { fontSize: 13, color: '#333', fontWeight: '500' },
-  statValueHighlight: { color: '#0B63C6' },
+  statValueHighlight: { color: '#5C4AE4' },
   chevron: { position: 'absolute', right: 0, alignSelf: 'center' }
 });

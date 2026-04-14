@@ -1,16 +1,15 @@
 import { useTimerStore } from '@/store/userTimerStore';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View, Dimensions } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Animated, { 
-    FadeInRight, 
-    FadeOutRight, 
-    useAnimatedStyle, 
-    useSharedValue, 
-    withRepeat, 
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+    FadeInRight,
+    FadeOutRight,
+    useAnimatedStyle,
+    useSharedValue,
+    withRepeat,
     withTiming,
-    runOnJS
 } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -18,7 +17,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export const WorkoutTimer = () => {
     const router = useRouter();
     const { workoutElapsed, isWorkoutActive, activeWorkoutId, activeRoutineName } = useTimerStore();
-    
+
     // Dragging Logic
     const translateY = useSharedValue(0);
     const context = useSharedValue({ y: 0 });
@@ -62,9 +61,9 @@ export const WorkoutTimer = () => {
         if (activeWorkoutId) {
             router.push({
                 pathname: '/workout',
-                params: { 
+                params: {
                     workoutId: activeWorkoutId,
-                    routineName: activeRoutineName 
+                    routineName: activeRoutineName
                 }
             });
         }
@@ -72,20 +71,16 @@ export const WorkoutTimer = () => {
 
     return (
         <GestureDetector gesture={panGesture}>
-            <Animated.View 
-                entering={FadeInRight} 
-                exiting={FadeOutRight} 
+            <Animated.View
+                entering={FadeInRight}
+                exiting={FadeOutRight}
                 style={[styles.container, animatedWrapperStyle]}
             >
-                <Pressable 
+                <Pressable
                     style={styles.bubble}
                     onPress={handleNavigate}
                 >
                     <View style={styles.content}>
-                        <View style={styles.liveContainer}>
-                            <Animated.View style={[styles.dot, pulseStyle]} />
-                            <Text style={styles.liveText}>LIVE</Text>
-                        </View>
                         <Text style={styles.timeText}>{formatTime(workoutElapsed)}</Text>
                     </View>
                 </Pressable>
@@ -102,7 +97,7 @@ const styles = StyleSheet.create({
         zIndex: 9999,
     },
     bubble: {
-        backgroundColor: '#0B63C6',
+        backgroundColor: '#5C4AE4',
         paddingLeft: 14,
         paddingRight: 10,
         paddingVertical: 10,
@@ -148,9 +143,9 @@ const styles = StyleSheet.create({
         fontWeight: '900',
         letterSpacing: 0.8,
     },
-    timeText: { 
-        color: '#fff', 
-        fontWeight: '900', 
+    timeText: {
+        color: '#fff',
+        fontWeight: '900',
         fontSize: 15,
         width: 50,
         textAlign: 'center',

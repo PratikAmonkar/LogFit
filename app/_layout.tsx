@@ -16,18 +16,15 @@ export default function RootLayout() {
 
   const appState = useRef(AppState.currentState);
 
-  // ── App startup ──────────────────────────────────────────────────────────
   useEffect(() => {
     const setup = async () => {
       await initDatabase();
       await loadProfile();
-      // Restore timer if app was killed while a workout was active
       await hydrateFromStorage();
     };
     setup();
   }, []);
 
-  // ── Foreground re-entry: instantly sync elapsed to real wall-clock time ──
   useEffect(() => {
     const subscription = AppState.addEventListener(
       'change',
@@ -36,7 +33,6 @@ export default function RootLayout() {
           appState.current.match(/inactive|background/) &&
           nextState === 'active'
         ) {
-          // App just came back to foreground — snap the timer to real time
           syncElapsed();
         }
         appState.current = nextState;
@@ -45,9 +41,7 @@ export default function RootLayout() {
     return () => subscription.remove();
   }, [syncElapsed]);
 
-  // ── 1-second interval drives re-renders ──────────────────────────────────
-  // (workoutElapsed is already computed from wall-clock in tick(), so the
-  //  interval only matters for keeping the UI updating smoothly)
+
   useEffect(() => {
     if (!isWorkoutActive && !isResting) return;
     const interval = setInterval(() => {
@@ -61,8 +55,6 @@ export default function RootLayout() {
       <BottomSheetModalProvider>
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
-
-        {/* Global Components */}
         <WorkoutTimer />
         <RestTimerOverlay />
       </BottomSheetModalProvider>

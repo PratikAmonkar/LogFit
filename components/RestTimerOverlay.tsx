@@ -46,7 +46,7 @@ export const RestTimerOverlay = () => {
                             />
                             <AnimatedCircle
                                 cx={110} cy={110} r={R}
-                                stroke="#0B63C6"
+                                stroke="#5C4AE4"
                                 strokeWidth={10}
                                 fill="transparent"
                                 strokeDasharray={CIRCLE_LENGTH}
@@ -90,9 +90,9 @@ export const RestTimerOverlay = () => {
 };
 
 const styles = StyleSheet.create({
-    fullScreen: { 
-        flex: 1, 
-        justifyContent: 'center', 
+    fullScreen: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0,0,0,0.5)' // Translucent backdrop
     },
@@ -109,13 +109,13 @@ const styles = StyleSheet.create({
         elevation: 10,
     },
     badge: {
-        backgroundColor: '#0B63C615',
+        backgroundColor: '#EEF4FF',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
         marginBottom: 20,
     },
-    badgeText: { color: '#0B63C6', fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
+    badgeText: { color: '#5C4AE4', fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
     timerContainer: {
         width: 220,
         height: 220,
@@ -135,19 +135,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f2f4f7',
+        backgroundColor: '#EEF4FF',
         borderRadius: 20,
         gap: 8,
     },
     plusIcon: { backgroundColor: '#fff', padding: 2, borderRadius: 6 },
-    outlineBtnText: { color: '#0B63C6', fontWeight: '800', fontSize: 15 },
+    outlineBtnText: { color: '#5C4AE4', fontWeight: '800', fontSize: 15 },
     primaryBtn: {
         flex: 1.5,
         height: 60,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0B63C6',
+        backgroundColor: '#5C4AE4',
         borderRadius: 20,
         gap: 10,
         shadowColor: '#0B63C6',
