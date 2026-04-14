@@ -195,23 +195,6 @@ const styles = StyleSheet.create({
         width: '85%',
         height: '100%',
     },
-    decorCircle: {
-        position: 'absolute',
-        borderWidth: 2,
-        borderRadius: 999,
-    },
-    decorCircle1: {
-        width: 260,
-        height: 260,
-        bottom: -60,
-        right: -60,
-    },
-    decorCircle2: {
-        width: 180,
-        height: 180,
-        top: -40,
-        left: -40,
-    },
     textBlock: {
         alignItems: 'center',
         paddingHorizontal: 8,
@@ -247,21 +230,5 @@ const styles = StyleSheet.create({
     dot: {
         height: 8,
         borderRadius: 4,
-    },
-    ctaBtn: {
-        paddingVertical: 18,
-        borderRadius: 16,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 5,
-    },
-    ctaBtnText: {
-        color: '#fff',
-        fontSize: 17,
-        fontWeight: '800',
-        letterSpacing: 0.5,
     },
 });

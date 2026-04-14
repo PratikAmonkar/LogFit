@@ -7,7 +7,7 @@ import Animated, { FadeIn, FadeOut, useAnimatedProps, withTiming, ZoomIn } from 
 import Svg, { Circle } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
-const CIRCLE_LENGTH = 565; // 2 * PI * 90
+const CIRCLE_LENGTH = 565;
 const R = 90;
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -94,7 +94,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)' // Translucent backdrop
     },
     card: {
         backgroundColor: 'rgba(255, 255, 255, 0.98)',

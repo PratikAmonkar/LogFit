@@ -75,8 +75,6 @@ export default function WelcomeScreen() {
     );
   };
 
-
-
   return (
     <SafeAreaView style={styles.responsiveWrapper}>
       <View style={styles.heroBox}>
@@ -93,18 +91,6 @@ export default function WelcomeScreen() {
 
       <View style={styles.footer}>
         {showButton && isSetupCompleted === false ? (
-          // <AnimatedRN.View entering={FadeInDown.duration(400)}>
-          //   <Pressable onPress={handleGetStarted} style={styles.gradientBtnWrapper}>
-          //     <LinearGradient
-          //       colors={['#5C4AE4', '#0B63C6']}
-          //       start={{ x: 0, y: 0 }}
-          //       end={{ x: 1, y: 0 }}
-          //       style={styles.gradientBtn}
-          //     >
-          //       <Text style={styles.gradientBtnText}>Get Started</Text>
-          //     </LinearGradient>
-          //   </Pressable>
-          // </AnimatedRN.View>
           <AppButton label='Get Started' onPress={handleGetStarted} />
         ) : (
           <AnimatedRN.View entering={FadeInDown.delay(400).duration(500)} style={styles.progressWrapper}>
@@ -209,27 +195,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  gradientBtnWrapper: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#5C4AE4',
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  gradientBtn: {
-    paddingVertical: 18,
-    alignItems: 'center',
-    borderRadius: 16,
-  },
-  gradientBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-
   versionText: {
     textAlign: 'center',
     fontSize: 14,
@@ -238,5 +203,4 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     letterSpacing: 0.5,
   },
-
 });

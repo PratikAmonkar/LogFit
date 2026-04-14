@@ -42,7 +42,6 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center', flex: 1 },
-  backBtn: { padding: 20 },
   content: { flex: 1, paddingHorizontal: 24, paddingTop: 30 },
   title: { fontSize: 32, fontWeight: '900', color: '#111', marginBottom: 8 },
   subtitle: { fontSize: 16, color: '#666', marginBottom: 40, fontWeight: '500' },

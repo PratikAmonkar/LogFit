@@ -67,13 +67,4 @@ const styles = StyleSheet.create({
   cardSelected: { borderColor: '#5C4AE4', backgroundColor: '#fff' },
   image: { width: 140, height: 180, marginBottom: 12 },
   cardText: { fontSize: 18, fontWeight: '600' },
-  footer: { marginBottom: 20 },
-  button: {
-    backgroundColor: '#5C4AE4',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  buttonDisabled: { backgroundColor: '#a8a2dc' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
 });

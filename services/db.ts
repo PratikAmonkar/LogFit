@@ -2,16 +2,6 @@ import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabaseSync('logfit.db');
 
-export const deleteDatabase = async () => {
-  try {
-    await db.closeAsync();
-    await SQLite.deleteDatabaseAsync('logfit.db');
-    console.log('Database deleted successfully');
-  } catch (error) {
-    console.error('Failed to delete database:', error);
-  }
-};
-
 export const initDatabase = async () => {
   try {
     await db.execAsync(`

@@ -121,6 +121,4 @@ const styles = StyleSheet.create({
     exerciseItemText: { flex: 1, fontSize: 16, fontWeight: '700', color: '#333' },
     selectedText: { color: '#0B63C6' },
     footer: { padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f0f0f5' },
-    btn: { backgroundColor: '#0B63C6', padding: 18, borderRadius: 12, alignItems: 'center' },
-    btnText: { color: '#fff', fontWeight: '800', fontSize: 15, letterSpacing: 0.5 },
 });

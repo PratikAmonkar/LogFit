@@ -7,7 +7,7 @@ import { WorkoutRepository } from "./workoutRepository";
 export const DataPortabilityService = {
     exportFullVault: async () => {
         try {
-            const dbStats = await WorkoutRepository.getEverything();
+            const dbStats = await WorkoutRepository.getWorkoutDataOnly();
             const allKeys = await AsyncStorage.getAllKeys();
             const settingsData = await AsyncStorage.multiGet(allKeys);
             const settingsObj = Object.fromEntries(settingsData);
@@ -39,7 +39,7 @@ export const DataPortabilityService = {
     importFullVault: async (): Promise<boolean> => {
         try {
             const result = await DocumentPicker.getDocumentAsync({ type: "application/json" });
-            if (result.canceled) return false; // User cancelled — not an error
+            if (result.canceled) return false;
 
             const file = new File(result.assets[0].uri);
             const fileContent = await file.text();
@@ -89,7 +89,7 @@ export const DataPortabilityService = {
     importWorkoutsOnly: async (): Promise<boolean> => {
         try {
             const result = await DocumentPicker.getDocumentAsync({ type: "application/json" });
-            if (result.canceled) return false; // User cancelled — not an error
+            if (result.canceled) return false;
 
             const file = new File(result.assets[0].uri);
             const fileContent = await file.text();

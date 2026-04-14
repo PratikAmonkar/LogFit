@@ -9,7 +9,7 @@ export interface UserProfile {
   weight_unit: string;
   height_unit: string;
   gym_time: string;
-  gym_days: string; // Store as comma-separated or JSON string
+  gym_days: string;
 }
 
 export interface WeightEntry {
@@ -59,29 +59,19 @@ export const UserRepository = {
       );
     }
 
-    // If weight is provided, also log it in history
     if (weight !== undefined) {
       await this.addWeightHistory(weight);
     }
   },
 
-  /**
-   * Get the user profile.
-   */
   async getProfile(): Promise<UserProfile | null> {
     return await db.getFirstAsync<UserProfile>('SELECT * FROM user_profile WHERE id = 1');
   },
 
-  /**
-   * Add a weight entry to history.
-   */
   async addWeightHistory(weight: number): Promise<void> {
     await db.runAsync('INSERT INTO weight_history (weight) VALUES (?)', weight);
   },
 
-  /**
-   * Get all weight history entries.
-   */
   async getWeightHistory(): Promise<WeightEntry[]> {
     return await db.getAllAsync<WeightEntry>('SELECT * FROM weight_history ORDER BY date DESC');
   }

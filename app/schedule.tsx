@@ -99,7 +99,6 @@ export default function ScheduleScreen() {
     <SafeAreaView style={styles.container}>
       {isEdit && (
         <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24 }}>
-
           <Pressable onPress={() => router.back()} style={{ padding: 10, paddingLeft: 0 }}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </Pressable>
@@ -179,9 +178,6 @@ export default function ScheduleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  headerNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, height: 56 },
-  backBtn: { width: 44, height: 44, justifyContent: 'center' },
-  stepText: { fontSize: 13, fontWeight: '700', color: '#888', letterSpacing: 1 },
   content: { paddingHorizontal: 24, paddingTop: 20 },
   title: { fontSize: 32, fontWeight: '800', color: '#111', marginBottom: 12, lineHeight: 40 },
   subtitle: { fontSize: 15, color: '#666', lineHeight: 22, marginBottom: 32 },
@@ -205,6 +201,4 @@ const styles = StyleSheet.create({
   periodText: { fontSize: 13, fontWeight: '800', color: '#8b92a5' },
   periodTextActive: { color: '#fff' },
   footer: { padding: 24, paddingBottom: 32 },
-  button: { backgroundColor: '#5C4AE4', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });

@@ -1,6 +1,6 @@
 import { useTimerStore } from '@/store/userTimerStore';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -8,8 +8,6 @@ import Animated, {
     FadeOutRight,
     useAnimatedStyle,
     useSharedValue,
-    withRepeat,
-    withTiming,
 } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -18,7 +16,6 @@ export const WorkoutTimer = () => {
     const router = useRouter();
     const { workoutElapsed, isWorkoutActive, activeWorkoutId, activeRoutineName } = useTimerStore();
 
-    // Dragging Logic
     const translateY = useSharedValue(0);
     const context = useSharedValue({ y: 0 });
 
@@ -27,26 +24,12 @@ export const WorkoutTimer = () => {
             context.value = { y: translateY.value };
         })
         .onUpdate((event) => {
-            // Constrain movement within screen bounds
             const newY = event.translationY + context.value.y;
             translateY.value = Math.max(-20, Math.min(newY, SCREEN_HEIGHT - 200));
         });
 
     const animatedWrapperStyle = useAnimatedStyle(() => ({
         transform: [{ translateY: translateY.value }]
-    }));
-
-    // Pulsing Logic
-    const pulse = useSharedValue(1);
-    useEffect(() => {
-        if (isWorkoutActive) {
-            pulse.value = withRepeat(withTiming(0.4, { duration: 1000 }), -1, true);
-        }
-    }, [isWorkoutActive]);
-
-    const pulseStyle = useAnimatedStyle(() => ({
-        opacity: pulse.value,
-        transform: [{ scale: pulse.value * 0.5 + 0.5 }]
     }));
 
     if (!isWorkoutActive) return null;
@@ -117,31 +100,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-    },
-    liveContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,59,48,0.1)',
-        paddingHorizontal: 7,
-        paddingVertical: 4,
-        borderRadius: 8,
-        gap: 5,
-    },
-    dot: {
-        width: 7,
-        height: 7,
-        borderRadius: 3.5,
-        backgroundColor: '#ff3b30',
-        shadowColor: '#ff3b30',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8,
-        shadowRadius: 4,
-    },
-    liveText: {
-        color: '#ff3b30',
-        fontSize: 10,
-        fontWeight: '900',
-        letterSpacing: 0.8,
     },
     timeText: {
         color: '#fff',

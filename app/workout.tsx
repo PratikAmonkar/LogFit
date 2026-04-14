@@ -115,8 +115,6 @@ export default function WorkoutScreen() {
       const fullExercises = await Promise.all(data.map(async (ex) => {
         const sets = await WorkoutRepository.getSetsForExercise(ex.id!);
         const prevSets = await WorkoutRepository.getPreviousPerformance(ex.name, Number(workoutId));
-
-
         return { ...ex, sets, prevSets };
       }));
 
@@ -313,8 +311,6 @@ export default function WorkoutScreen() {
               <View style={styles.addCircle}><Ionicons name="add" size={20} color="#5C4AE4" /></View>
               <Text style={styles.addBtnText}>INJECT NEW MOVEMENT</Text>
             </Pressable>
-
-
             <AppButton label="Finish Workout" onPress={() => setShowSummary(true)} />
           </>
         )}
@@ -342,20 +338,10 @@ export default function WorkoutScreen() {
             </Text>
 
             <View style={{ width: '100%', gap: 12 }}>
-              {/* <Pressable style={styles.resumeBtn} onPress={handleAccept}>
-                <Text style={styles.resumeBtnText}>
-                  {isWorkoutActive ? "RESUME SESSION" : "START NOW"}
-                </Text>
-              </Pressable> */}
               <AppButton label={isWorkoutActive ? "Resume Session" : "Start Now"} onPress={handleAccept} />
-
               {isWorkoutActive && (
-                // <Pressable style={styles.startNewBtn} onPress={handleStartNew}>
-                //   <Text style={styles.startNewBtnText}>START NEW WORKOUT</Text>
-                // </Pressable>
                 <AppButton label='Start New Workout' onPress={handleStartNew} />
               )}
-
               <Pressable style={styles.cancelLink} onPress={handleCancel}>
                 <Text style={styles.cancelLinkText}>Not yet, go back</Text>
               </Pressable>
@@ -386,9 +372,6 @@ export default function WorkoutScreen() {
                 <Text style={styles.statLabel}>EXERCISES</Text>
               </View>
             </View>
-            {/* <Pressable style={styles.doneBtn} onPress={confirmFinish}>
-              <Text style={styles.doneBtnText}>DONE</Text>
-            </Pressable> */}
             <AppButton label='Done' onPress={confirmFinish} style={{ width: '100%', }} />
           </Animated.View>
         </View>
@@ -460,8 +443,6 @@ const styles = StyleSheet.create({
   addBtn: { alignItems: 'center', marginTop: 10, marginBottom: 20, padding: 20, borderRadius: 12, backgroundColor: '#fff' },
   addCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   addBtnText: { fontSize: 11, fontWeight: '800', color: '#333', letterSpacing: 1 },
-  finishBtnContainer: { backgroundColor: '#0B63C6', padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 10 },
-  finishBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
   modalContent: { flex: 1, paddingHorizontal: 20 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 16 },
   modalTitle: { fontSize: 20, fontWeight: '800', color: '#111' },
@@ -481,20 +462,11 @@ const styles = StyleSheet.create({
   statBox: { alignItems: 'center', flex: 1 },
   statValue: { fontSize: 20, fontWeight: '900', color: '#111', marginBottom: 4 },
   statLabel: { fontSize: 9, fontWeight: '700', color: '#8b92a5', letterSpacing: 1 },
-  doneBtn: { backgroundColor: '#111', width: '100%', paddingVertical: 18, borderRadius: 16, alignItems: 'center' },
-  doneBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
-  confetti: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 100 },
-
-  // Resume Modal Styles
   resumeCard: { backgroundColor: 'rgba(255, 255, 255, 0.98)', width: '100%', borderRadius: 32, padding: 32, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 10 },
   resumeIconOuter: { marginBottom: 20 },
   iconCircleLarge: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center' },
   resumeTitle: { fontSize: 22, fontWeight: '900', color: '#111', marginBottom: 10 },
   resumeSubtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 30, lineHeight: 22 },
-  resumeBtn: { backgroundColor: '#0B63C6', width: '100%', paddingVertical: 18, borderRadius: 18, alignItems: 'center' },
-  resumeBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
-  startNewBtn: { backgroundColor: '#f2f4f7', width: '100%', paddingVertical: 16, borderRadius: 18, alignItems: 'center' },
-  startNewBtnText: { color: '#444', fontSize: 13, fontWeight: '700' },
   cancelLink: { marginTop: 15, paddingVertical: 10 },
   cancelLinkText: { color: '#888', fontSize: 13, fontWeight: '700' },
 });

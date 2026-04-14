@@ -8,11 +8,10 @@ import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
-const RULER_WIDTH = width - 48; // Account for 24px padding on both sides in styles.content
-
+const RULER_WIDTH = width - 48;
 export default function WeightScreen() {
   const router = useRouter();
-  const { isLoading, updateProfile } = useUserStore();
+  const { updateProfile } = useUserStore();
   const { gender, mode, initialWeight, initialUnit } = useLocalSearchParams();
   const [unit, setUnit] = useState<'kg' | 'lb'>((initialUnit as 'kg' | 'lb') || 'kg');
   const [weight, setWeight] = useState(initialWeight ? parseInt(initialWeight as string) : 60);
@@ -27,8 +26,8 @@ export default function WeightScreen() {
   }));
 
   const weights = unit === 'kg'
-    ? Array.from({ length: 231 }, (_, i) => i + 20)  // 20 to 250
-    : Array.from({ length: 511 }, (_, i) => i + 40); // 40 to 550
+    ? Array.from({ length: 231 }, (_, i) => i + 20)
+    : Array.from({ length: 511 }, (_, i) => i + 40);
 
   const handleUnitChange = (u: 'kg' | 'lb') => {
     if (u === unit) return;
@@ -136,12 +135,6 @@ export default function WeightScreen() {
         </View>
 
         <View style={styles.footer}>
-          {/* <Pressable
-            style={styles.button}
-            onPress={handlePress}
-          >
-            <Text style={styles.buttonText}>{isEdit ? 'Save Changes' : 'Next'}</Text>
-          </Pressable> */}
           <AppButton label={isEdit ? 'Save Changes' : 'Next'} onPress={handlePress} />
         </View>
       </Animated.View>
@@ -152,8 +145,6 @@ export default function WeightScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   content: { flex: 1, padding: 24, justifyContent: 'space-between' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, marginBottom: 20 },
-  backBtn: { padding: 10, paddingLeft: 0 },
   title: { fontSize: 26, fontWeight: 'bold', textAlign: 'center', flex: 1 },
   toggleContainer: {
     flexDirection: 'row',
@@ -164,7 +155,7 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
     marginTop: 20,
     position: 'relative',
-    width: 120, // (24*2) + (36*2) approx
+    width: 120,
     height: 44,
     justifyContent: 'space-between'
   },
@@ -197,6 +188,4 @@ const styles = StyleSheet.create({
     left: RULER_WIDTH / 2 - 1
   },
   footer: { marginBottom: 20 },
-  button: { backgroundColor: '#5C4AE4', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
 });

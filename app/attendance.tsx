@@ -5,7 +5,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Helper to generate stable mock month data for the UI representation
 const generateMockMonth = (days: number, actives: number[]) => {
   const activeSet = new Set(actives);
   return Array.from({ length: days }, (_, i) => ({
@@ -35,7 +34,6 @@ export default function AttendanceScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollArea} showsVerticalScrollIndicator={false}>
         <View style={styles.responsiveWrapper}>
-          {/* Top Highlight Stats */}
           <Animated.View entering={FadeInUp.delay(50).duration(400)} style={styles.statsRow}>
             <View style={styles.statBox}>
               <Ionicons name="flame" size={28} color="#ff9800" marginBottom={8} />
@@ -54,7 +52,6 @@ export default function AttendanceScreen() {
             </View>
           </Animated.View>
 
-          {/* Historical Heatmaps */}
           {monthsData.map((month, mIdx) => (
             <Animated.View key={month.name} entering={FadeInUp.delay(100 + mIdx * 100).duration(400)} style={styles.card}>
               <Text style={styles.monthTitle}>{month.name}</Text>

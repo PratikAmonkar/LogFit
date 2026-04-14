@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HeightScreen() {
   const router = useRouter()
-  const { isLoading, updateProfile } = useUserStore()
+  const { updateProfile } = useUserStore()
   const { gender, weight, mode, initialHeight, initialUnit, weightUnit } = useLocalSearchParams();
   const [unit, setUnit] = useState<'cm' | 'ft'>((initialUnit as 'cm' | 'ft') || 'cm');
   const [personHeight, setPersonHeight] = useState(initialHeight ? parseFloat(initialHeight as string) : 170);
@@ -36,8 +36,6 @@ export default function HeightScreen() {
     setUnit(u);
     setPersonHeight(newHeight);
     toggleX.value = u === 'cm' ? 0 : 56;
-
-    // Scroll to new position
     const offset = u === 'cm' ? 100 : 3.0;
     const step = u === 'cm' ? 1 : 0.1;
     setTimeout(() => {
@@ -46,7 +44,6 @@ export default function HeightScreen() {
   };
 
   useEffect(() => {
-    // Initial scroll
     const offset = unit === 'cm' ? 100 : 3.0;
     const step = unit === 'cm' ? 1 : 0.1;
     setTimeout(() => {
@@ -172,7 +169,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   content: { flex: 1, padding: 24, justifyContent: 'space-between' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, marginBottom: 10 },
-  backBtn: { padding: 10, paddingLeft: 0 },
   title: { fontSize: 26, fontWeight: 'bold', textAlign: 'center', flex: 1 },
   toggleContainer: {
     flexDirection: 'row',
@@ -212,7 +208,4 @@ const styles = StyleSheet.create({
   rulerLine: { height: 2, width: 20, backgroundColor: '#ddd' },
   rulerLineLong: { width: 40, backgroundColor: '#aaa' },
   pointer: { position: 'absolute', left: 0, right: 0, top: 224, height: 2, backgroundColor: '#5C4AE4', zIndex: 10 },
-  footer: { marginBottom: 20 },
-  button: { backgroundColor: '#5C4AE4', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
 });

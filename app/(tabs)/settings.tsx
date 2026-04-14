@@ -1,18 +1,14 @@
 import { DataPortabilityService } from '@/services/dataPortabilityService';
 import { useUserStore } from '@/store/userStore';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
-
-  const profileSheetRef = useRef<BottomSheetModal>(null);
 
   const { isLoading, data, updateProfile } = useUserStore();
 
@@ -79,7 +75,6 @@ export default function SettingsScreen() {
         try {
           const result = await DataPortabilityService.importFullVault();
           if (result === true) setShowSuccess(true);
-          // result === false means user cancelled picker — do nothing
         } catch (err: any) {
           setErrorMessage(err?.message || 'Import failed. Please check the file and try again.');
           setShowError(true);
@@ -100,7 +95,6 @@ export default function SettingsScreen() {
         try {
           const result = await DataPortabilityService.importWorkoutsOnly();
           if (result === true) setShowSuccess(true);
-          // result === false means user cancelled picker — do nothing
         } catch (err: any) {
           setErrorMessage(err?.message || 'Import failed. Please check the file and try again.');
           setShowError(true);
@@ -126,11 +120,6 @@ export default function SettingsScreen() {
 
     await updateProfile({ [`${type}_unit`]: unit, [type]: newValue });
   };
-
-  const renderBackdrop = useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
 
   if (isLoading && !data) {
     return (
@@ -352,66 +341,6 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
-
-      <BottomSheetModal
-        ref={profileSheetRef}
-        index={0}
-        snapPoints={['75%']}
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: '#fff', borderRadius: 24 }}
-        handleIndicatorStyle={{ backgroundColor: '#ccc', width: 40 }}
-      >
-        <BottomSheetView style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 24) }]}>
-          <Text style={styles.modalTitle}>Fitness Data</Text>
-          <Text style={styles.modalSubtitle}>Update your physical stats and schedule.</Text>
-
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Height ({data?.height_unit})</Text>
-              <TextInput
-                style={styles.input}
-                value={data?.height?.toString()}
-                onChangeText={t => { }}
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Weight ({data?.weight_unit})</Text>
-              <TextInput
-                style={styles.input}
-                value={data?.weight?.toString()}
-                onChangeText={t => { }}
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-
-          <Text style={styles.label}>Gym Time</Text>
-          <TextInput
-            style={styles.input}
-            value={data?.gym_time}
-            placeholder="e.g. 06:30 AM"
-            onChangeText={t => { }}
-          />
-
-          <Text style={styles.label}>Gym Days</Text>
-          <TextInput
-            style={styles.input}
-            value={data?.gym_days}
-            placeholder="e.g. Mon, Wed, Fri"
-            onChangeText={t => { }}
-          />
-
-          <View style={styles.modalActions}>
-            <Pressable style={styles.cancelBtn} onPress={() => profileSheetRef.current?.dismiss()}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </Pressable>
-            <Pressable style={styles.saveBtn} onPress={() => { }}>
-              <Text style={styles.saveBtnText}>Save Changes</Text>
-            </Pressable>
-          </View>
-        </BottomSheetView>
-      </BottomSheetModal>
     </SafeAreaView>
   );
 }
@@ -429,7 +358,6 @@ const styles = StyleSheet.create({
   rowSubtitle: { fontSize: 13, color: '#8b92a5', marginTop: 2 },
   divider: { height: 1, backgroundColor: '#f0f0f5', marginLeft: 64 },
 
-  // Data Management Cards
   backupCard: { backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 20, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#f0f0f5' },
   backupHeader: { flexDirection: 'row', padding: 16, gap: 12, alignItems: 'center' },
   backupIcon: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
@@ -446,7 +374,6 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: 13, fontWeight: '700', color: '#888' },
   toggleActiveText: { color: '#5C4AE4' },
 
-  // Confirmation Modal Styles
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
   confirmBox: { width: '85%', backgroundColor: '#fff', borderRadius: 28, paddingVertical: 24, paddingHorizontal: 16, alignItems: 'center' },
   statusCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
@@ -458,22 +385,9 @@ const styles = StyleSheet.create({
   primaryConfirmBtn: { backgroundColor: '#5C4AE4', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
   primaryConfirmBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
 
-  // Success Dialog Styles (Gray/Black Theme)
   successCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f5', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
 
-  // Error Dialog Styles
   errorCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#FEE2E2', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
-
-  modalContent: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
-  modalTitle: { fontSize: 22, fontWeight: '800', marginBottom: 6 },
-  modalSubtitle: { fontSize: 14, color: '#666', marginBottom: 24, fontWeight: '500' },
-  label: { fontSize: 12, fontWeight: '700', color: '#555', marginBottom: 8, marginTop: 4 },
-  input: { backgroundColor: '#f2f4f7', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: '#111', fontWeight: '600' },
-  modalActions: { flexDirection: 'row', marginTop: 10, gap: 12 },
-  cancelBtn: { flex: 1, backgroundColor: '#f2f4f7', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
-  cancelBtnText: { fontSize: 15, fontWeight: '700', color: '#555' },
-  saveBtn: { flex: 1, backgroundColor: '#0B63C6', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
-  saveBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 
   responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center' }
 });

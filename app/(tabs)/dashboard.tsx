@@ -69,16 +69,6 @@ export default function DashboardScreen() {
     };
   };
 
-  const formatWorkoutDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (daysDiff === 0) return 'Today';
-    if (daysDiff === 1) return 'Yesterday';
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
@@ -92,7 +82,6 @@ export default function DashboardScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollArea}>
         <View style={styles.responsiveWrapper}>
 
-          {/* Modern Header */}
           <Animated.View entering={FadeInUp.delay(50).duration(400)} style={styles.header}>
             <View style={{ flex: 1 }}>
               <Text style={styles.dateLabel}>{formattedDate}</Text>
@@ -100,7 +89,6 @@ export default function DashboardScreen() {
             </View>
           </Animated.View>
 
-          {/* Activity Overiew Grid */}
           <Text style={styles.sectionTitle}>ACTIVITY OVERVIEW</Text>
           <View style={styles.statsRow}>
             <Animated.View entering={FadeInUp.delay(150).duration(400)} style={[styles.statMiniCard, { backgroundColor: '#EEF4FF' }]}>
@@ -128,7 +116,6 @@ export default function DashboardScreen() {
             </Animated.View>
           </View>
 
-          {/* Consistency Heatmap */}
           <Animated.View
             entering={FadeInUp.delay(300).duration(400)}
             style={[styles.chartCard, {
@@ -163,7 +150,6 @@ export default function DashboardScreen() {
             </View>
           </Animated.View>
 
-          {/* Last Workout Quick View - History Style */}
           {lastWorkout && (
             <Animated.View entering={FadeInUp.delay(350).duration(400)}>
               <Text style={styles.sectionTitle}>LAST SESSION RESULTS</Text>
@@ -211,7 +197,6 @@ export default function DashboardScreen() {
         </View>
       </ScrollView>
 
-      {/* Modern Circular FAB */}
       <Animated.View entering={FadeInUp.delay(600).duration(500)} style={styles.fabContainer}>
         <Pressable
           style={[styles.fab, {
@@ -236,10 +221,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 28, marginTop: 10 },
   dateLabel: { fontSize: 13, fontWeight: '700', color: '#8b92a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
   greeting: { fontSize: 32, fontWeight: '900', color: '#111' },
-  profileBtn: { marginLeft: 10 },
-  avatarPlaceholder: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#f2f4f7', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff' },
-  avatarText: { fontSize: 16, fontWeight: '900', color: '#333' },
-
   sectionTitle: { fontSize: 12, fontWeight: '800', color: '#cbd5e1', letterSpacing: 1, marginBottom: 16, marginTop: 10 },
 
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 28 },
@@ -259,7 +240,6 @@ const styles = StyleSheet.create({
   fabContainer: { position: 'absolute', bottom: 30, right: 30 },
   fab: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#5C4AE4', justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10 },
 
-  // History style card for Dashboard - Flat version
   historyStyleCard: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#f1f5f9' },
   dateSection: { width: 50, alignItems: 'center', justifyContent: 'center' },
   monthText: { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 2 },

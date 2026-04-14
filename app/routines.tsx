@@ -84,23 +84,11 @@ export default function RoutinesScreen() {
     []
   );
 
-  const [activeWorkout, setActiveWorkout] = useState<any>(null);
-
   useFocusEffect(
     useCallback(() => {
-      checkActiveWorkout();
       getRoutines();
     }, [])
   );
-
-  const checkActiveWorkout = async () => {
-    try {
-      const active = await WorkoutRepository.getAnyActiveWorkoutToday();
-      setActiveWorkout(active);
-    } catch (err) {
-      console.error("Checking active workout failed", err);
-    }
-  };
 
   const openAddModal = () => {
     setEditingId(null);
@@ -161,7 +149,6 @@ export default function RoutinesScreen() {
   const handleStartRoutine = async (routine: DatabaseRoutine) => {
     if (!routine.id) return;
 
-    // 1. Check if already started today
     const existing = await WorkoutRepository.getTodayWorkout(routine.name);
     if (existing) {
       return router.push({
@@ -170,7 +157,6 @@ export default function RoutinesScreen() {
       });
     }
 
-    // 2. Otherwise check exercises
     const exercises = await RoutineRepository.getRoutineExercises(routine.id);
 
     if (exercises.length === 0) {
@@ -179,7 +165,6 @@ export default function RoutinesScreen() {
         params: { routineId: routine.id, routineName: routine.name }
       });
     } else {
-      // Create session and clone exercises
       const newWorkoutId = await WorkoutRepository.createWorkout(routine.name);
       await RoutineRepository.cloneTemplateToWorkout(routine.id, newWorkoutId);
 
@@ -189,7 +174,6 @@ export default function RoutinesScreen() {
       });
     }
   };
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -229,7 +213,6 @@ export default function RoutinesScreen() {
         )}
       </ScrollView>
 
-      {/* Editor Modal */}
       <BottomSheetModal
         ref={bottomSheetModalRef}
         index={0}
@@ -324,7 +307,6 @@ export default function RoutinesScreen() {
           </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
-
     </SafeAreaView>
   );
 }
@@ -348,7 +330,6 @@ const styles = StyleSheet.create({
   startBtn: { flex: 1, flexDirection: 'row', backgroundColor: '#5C4AE4', paddingVertical: 12, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   startBtnText: { color: '#fff', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
   deleteBtn: { backgroundColor: '#fff0f0', width: 44, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-
   modalContent: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   modalTitle: { fontSize: 20, fontWeight: '800', marginBottom: 20 },
   label: { fontSize: 12, fontWeight: '700', color: '#555', marginBottom: 8 },
@@ -358,8 +339,6 @@ const styles = StyleSheet.create({
   dayChipSelected: { backgroundColor: '#eff6ff', borderColor: '#5C4AE4' },
   dayChipText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
   dayChipTextSelected: { color: '#5C4AE4' },
-  pickerTrigger: { backgroundColor: '#f2f4f7', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  pickerTriggerText: { fontSize: 15, color: '#111', fontWeight: '500' },
   pickerContainer: { flexDirection: 'row', backgroundColor: '#f8f9fc', borderRadius: 12, padding: 12, marginBottom: 16, gap: 12 },
   pickerColumn: { flex: 1, alignItems: 'center' },
   pickerLabel: { fontSize: 10, fontWeight: '700', color: '#8b92a5', marginBottom: 8, textTransform: 'uppercase' },
@@ -368,26 +347,5 @@ const styles = StyleSheet.create({
   pickerItemActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
   pickerItemText: { fontSize: 16, fontWeight: '500', color: '#8b92a5' },
   pickerItemTextActive: { color: '#5C4AE4', fontWeight: '700' },
-  modalActions: { flexDirection: 'row', marginTop: 10, gap: 12 },
-  cancelBtn: { flex: 1, backgroundColor: '#f2f4f7', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
-  cancelBtnText: { fontSize: 15, fontWeight: '700', color: '#555' },
-  saveBtn: { flex: 1, backgroundColor: '#5C4AE4', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
-  saveBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
-
-  banner: {
-    backgroundColor: '#eff6ff',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderLeftWidth: 4,
-    borderLeftColor: '#0B63C6',
-  },
-  bannerInfo: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  pulseDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#0B63C6', marginRight: 10 },
-  bannerTitle: { fontSize: 13, fontWeight: '700', color: '#1e3a8a' },
-  resumeBtnText: { color: '#0B63C6', fontSize: 13, fontWeight: '900', letterSpacing: 0.5 }
+  modalActions: { flexDirection: 'row', marginTop: 10, gap: 12 }
 });

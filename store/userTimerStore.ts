@@ -4,8 +4,8 @@ import { create } from "zustand";
 const TIMER_STORAGE_KEY = 'logfit_active_workout_timer';
 
 interface TimerState {
-    workoutStartTime: number | null;   // real epoch ms — persisted
-    workoutElapsed: number;            // derived: Date.now() - workoutStartTime
+    workoutStartTime: number | null;
+    workoutElapsed: number;
     isWorkoutActive: boolean;
     activeWorkoutId: string | null;
     activeRoutineName: string | null;
@@ -20,9 +20,7 @@ interface TimerState {
     stopRest: () => void;
     tick: () => void;
 
-    /** Called once on app launch — rehydrates timer state from AsyncStorage if a workout was active */
     hydrateFromStorage: () => Promise<void>;
-    /** Called when the app returns to the foreground — instantly snaps elapsed to real wall-clock diff */
     syncElapsed: () => void;
 }
 
@@ -39,7 +37,6 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     startWorkout: (id, name) => {
         const startTime = Date.now();
 
-        // Persist so a cold-start can restore the timer
         AsyncStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({
             workoutStartTime: startTime,
             activeWorkoutId: id,
@@ -84,15 +81,9 @@ export const useTimerStore = create<TimerState>((set, get) => ({
             let nextWorkoutElapsed = s.workoutElapsed;
             let nextRestTimeLeft = s.restTimeLeft;
             let nextIsResting = s.isResting;
-
-            // Workout elapsed is always computed from real wall-clock time,
-            // so backgrounding/killing the app doesn't lose time.
             if (s.isWorkoutActive && s.workoutStartTime) {
                 nextWorkoutElapsed = Math.floor((Date.now() - s.workoutStartTime) / 1000);
             }
-
-            // Rest timer still counts down tick-by-tick (it's meant to be
-            // a short foreground countdown, and it auto-stops when done).
             if (s.isResting) {
                 if (s.restTimeLeft > 0) {
                     nextRestTimeLeft -= 1;
@@ -109,7 +100,6 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         });
     },
 
-    /** Rehydrate on cold start (app was killed while workout was active) */
     hydrateFromStorage: async () => {
         try {
             const raw = await AsyncStorage.getItem(TIMER_STORAGE_KEY);
@@ -133,7 +123,6 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         }
     },
 
-    /** Snap elapsed to current real value — call this when app returns to foreground */
     syncElapsed: () => {
         const { isWorkoutActive, workoutStartTime } = get();
         if (isWorkoutActive && workoutStartTime) {
