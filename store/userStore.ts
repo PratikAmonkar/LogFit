@@ -17,8 +17,6 @@ export const useUserStore = create<UserState>((set, get) => ({
         try {
             const data = await UserRepository.getProfile();
             set({ data: data, isLoading: false })
-            console.log(`Profile = ${JSON.stringify(data)}`);
-
         } catch (error) {
             console.error('Failed to load profile into store:', error);
             set({ isLoading: false })
