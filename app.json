@@ -28,8 +28,15 @@
         {
           "backgroundColor": "#ffffff",
           "image": "./assets/images/logo.png",
-          "imageWidth": 300,
-          "imageHeight": 300
+          "imageWidth": 100,
+          "imageHeight": 100
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification_icon_android.png",
+          "color": "#ffffff"
         }
       ]
     ],

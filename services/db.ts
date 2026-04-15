@@ -40,7 +40,8 @@ export const initDatabase = async () => {
         weight_unit TEXT DEFAULT 'kg',
         height_unit TEXT DEFAULT 'cm',
         gym_time TEXT,
-        gym_days TEXT
+        gym_days TEXT,
+        notifications_enabled INTEGER DEFAULT 1
       );
 
       CREATE TABLE IF NOT EXISTS weight_history (
@@ -64,6 +65,14 @@ export const initDatabase = async () => {
       );
 
     `);
+
+    // Safe migration for existing users
+    try {
+      await db.execAsync('ALTER TABLE user_profile ADD COLUMN notifications_enabled INTEGER DEFAULT 1');
+    } catch (e) {
+      // Column likely already exists
+    }
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Database initialization failed:', error);

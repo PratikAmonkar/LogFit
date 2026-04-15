@@ -3,8 +3,10 @@ import { useUserStore } from '@/store/userStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { NotificationService } from '@/services/notificationService';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
@@ -25,6 +27,17 @@ export default function SettingsScreen() {
     desc: '',
     onConfirm: () => { }
   });
+  const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkPermission = async () => {
+        const status = await NotificationService.getPermissionStatus();
+        setPermissionStatus(status);
+      };
+      checkPermission();
+    }, [])
+  );
 
   const triggerExportFull = () => {
     setConfirmConfig({
@@ -200,6 +213,32 @@ export default function SettingsScreen() {
               </View>
               <Ionicons name="chevron-forward" size={20} color="#5C4AE4" />
             </Pressable>
+
+            <View style={styles.divider} />
+
+            <View style={styles.row}>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}><Ionicons name="notifications-outline" size={20} color="#5C4AE4" /></View>
+              <View style={styles.rowContent}>
+                <Text style={styles.rowText}>Notifications</Text>
+                {permissionStatus === 'denied' ? (
+                  <Text style={[styles.rowSubtitle, { color: '#DC2626' }]}>Permission Denied</Text>
+                ) : (
+                  <Text style={styles.rowSubtitle}>Gym reminders & alerts</Text>
+                )}
+              </View>
+              {permissionStatus === 'denied' ? (
+                <Pressable onPress={() => NotificationService.openAppSettings()} style={styles.miniBtn}>
+                  <Text style={styles.miniBtnText}>Open Info</Text>
+                </Pressable>
+              ) : (
+                <Switch
+                  value={data?.notifications_enabled === 1}
+                  onValueChange={(val) => updateProfile({ notifications_enabled: val ? 1 : 0 })}
+                  trackColor={{ false: '#f2f4f7', true: '#5C4AE4' }}
+                  thumbColor={'#fff'}
+                />
+              )}
+            </View>
           </View>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>DATA MANAGEMENT</Text>
@@ -388,6 +427,9 @@ const styles = StyleSheet.create({
   successCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#f0f0f5', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
 
   errorCard: { width: '85%', backgroundColor: '#fff', borderRadius: 28, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#FEE2E2', elevation: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20 },
+
+  miniBtn: { backgroundColor: '#EEF4FF', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
+  miniBtnText: { fontSize: 12, fontWeight: '700', color: '#5C4AE4' },
 
   responsiveWrapper: { width: '100%', maxWidth: 768, alignSelf: 'center' }
 });

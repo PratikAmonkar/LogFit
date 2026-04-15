@@ -1,4 +1,5 @@
 import AppButton from '@/components/AppButton';
+import { NotificationService } from '@/services/notificationService';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
@@ -40,6 +41,13 @@ const SLIDES = [
         title: 'Crush Your\nLimits Daily',
         subtitle: 'Stay consistent, hit your targets, and become the strongest version of yourself.',
     },
+    {
+        id: '4',
+        image: require('../assets/images/onboarding4.png'),
+        title: 'Stay Notified,\nStay Consistent',
+        subtitle: 'Get gym reminders, streak alerts, and stay on track with your fitness goals.',
+    },
+
 ];
 
 export default function OnboardingScreen() {
@@ -55,10 +63,11 @@ export default function OnboardingScreen() {
         }
     ).current;
 
-    const goNext = () => {
+    const goNext = async () => {
         if (activeIndex < SLIDES.length - 1) {
             flatListRef.current?.scrollToIndex({ index: activeIndex + 1 });
         } else {
+            await NotificationService.requestPermission()
             router.replace('/gender');
         }
     };

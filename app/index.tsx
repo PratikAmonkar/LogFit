@@ -52,7 +52,9 @@ export default function WelcomeScreen() {
 
   useEffect(() => {
     if (showButton && isSetupCompleted === true) {
-      router.replace('/(tabs)/dashboard');
+      // router.replace('/(tabs)/dashboard');
+      router.replace('/onboarding');
+
     }
   }, [showButton, isSetupCompleted]);
 

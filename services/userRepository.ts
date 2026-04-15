@@ -10,6 +10,7 @@ export interface UserProfile {
   height_unit: string;
   gym_time: string;
   gym_days: string;
+  notifications_enabled: number;
 }
 
 export interface WeightEntry {
@@ -20,7 +21,7 @@ export interface WeightEntry {
 
 export const UserRepository = {
   async saveProfile(profile: Partial<UserProfile>): Promise<void> {
-    const { height, weight, gender, timer_value, height_unit, weight_unit, gym_time, gym_days } = profile;
+    const { height, weight, gender, timer_value, height_unit, weight_unit, gym_time, gym_days, notifications_enabled } = profile;
 
     const existing = await this.getProfile();
 
@@ -34,7 +35,8 @@ export const UserRepository = {
           weight_unit = COALESCE(?, weight_unit), 
           height_unit = COALESCE(?, height_unit),
           gym_time = COALESCE(?, gym_time),
-          gym_days = COALESCE(?, gym_days)
+          gym_days = COALESCE(?, gym_days),
+          notifications_enabled = COALESCE(?, notifications_enabled)
          WHERE id = 1`,
         height ?? null,
         weight ?? null,
@@ -43,11 +45,12 @@ export const UserRepository = {
         weight_unit ?? null,
         height_unit ?? null,
         gym_time ?? null,
-        gym_days ?? null
+        gym_days ?? null,
+        notifications_enabled ?? null
       );
     } else {
       await db.runAsync(
-        'INSERT INTO user_profile (id, height, weight, gender, timer_value, weight_unit, height_unit, gym_time, gym_days) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO user_profile (id, height, weight, gender, timer_value, weight_unit, height_unit, gym_time, gym_days, notifications_enabled) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         height ?? 0,
         weight ?? 0,
         gender ?? 'male',
@@ -55,7 +58,8 @@ export const UserRepository = {
         weight_unit ?? 'kg',
         height_unit ?? 'cm',
         gym_time ?? null,
-        gym_days ?? null
+        gym_days ?? null,
+        notifications_enabled ?? 1
       );
     }
 
