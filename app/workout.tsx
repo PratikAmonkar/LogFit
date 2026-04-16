@@ -1,87 +1,248 @@
+import AppAlert from '@/components/AppAlert';
 import AppButton from '@/components/AppButton';
-import { EXERCISE_NAMES } from '@/constants/exercise_list';
+import TimedSetModal from '@/components/TimedSetModal';
+import { CategoryImages } from '@/constants/category_images';
+import { ALL_EXERCISES, TrackingType } from '@/constants/exercise_list';
 import { DatabaseExercise, DatabaseSet, WorkoutRepository } from '@/services/workoutRepository';
 import { useTimerStore } from '@/store/userTimerStore';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetSectionList, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, LayoutAnimation, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, UIManager, View } from 'react-native';
 import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const formatDuration = (seconds: number) => {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
+const parseDuration = (text: string) => {
+  const parts = text.split(':').map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0] || 0;
+};
+
 type FullExercise = DatabaseExercise & { sets: DatabaseSet[], prevSets?: DatabaseSet[] | null };
 
-function WorkoutSetRow({ set, index, prevSet, onSave, onDelete }: {
+function WorkoutSetRow({ set, index, prevSet, trackingType, showHistory, onSave, onDelete, exerciseName }: {
   set: DatabaseSet,
   index: number,
   prevSet?: DatabaseSet | null,
-  onSave: (id: number, weight: number, reps: number, completed: number) => void,
+  trackingType: TrackingType,
+  showHistory: boolean,
+  exerciseName: string,
+  onSave: (id: number, weight: number, reps: number, completed: number, duration: number, calories: number, distance: number) => void,
   onDelete: (id: number) => void
 }) {
   const [localWeight, setLocalWeight] = useState(set.weight === 0 ? '' : set.weight.toString());
   const [localReps, setLocalReps] = useState(set.reps === 0 ? '' : set.reps.toString());
+  const [localDuration, setLocalDuration] = useState(set.duration === 0 ? '' : formatDuration(set.duration));
+  const [localCalories, setLocalCalories] = useState(set.calories === 0 ? '' : set.calories.toString());
+  const [localDistance, setLocalDistance] = useState(set.distance === 0 ? '' : set.distance.toString());
+
+  const { startSetTimer, runningSet, setElapsed, toggleSetTimerModal } = useTimerStore();
+
+  const isTimerActive = runningSet?.setId === set.id;
+
+  useEffect(() => {
+    if (isTimerActive) {
+      setLocalDuration(formatDuration(setElapsed));
+    }
+  }, [isTimerActive, setElapsed]);
+
+  useEffect(() => {
+    setLocalDuration(set.duration === 0 ? '' : formatDuration(set.duration));
+  }, [set.duration]);
+
+  const toggleTimer = () => {
+    if (isTimerActive) {
+      toggleSetTimerModal(true);
+    } else {
+      startSetTimer(set.id!, exerciseName);
+    }
+  };
+
+  const renderPrevious = () => {
+    if (!prevSet) return null;
+    let text = '';
+    if (trackingType === 'cardio' || trackingType === 'cardio-distance') {
+      const parts = [];
+      if (prevSet.duration) parts.push(formatDuration(prevSet.duration));
+      if (prevSet.distance) parts.push(`${prevSet.distance}km`);
+      if (prevSet.calories) parts.push(`${prevSet.calories}kcal`);
+      text = parts.join(' | ');
+    } else if (trackingType === 'bodyweight') {
+      text = `${prevSet.reps} reps`;
+    } else if (trackingType === 'timed') {
+      text = formatDuration(prevSet.duration);
+    } else {
+      text = `${prevSet.weight}kg x ${prevSet.reps}`;
+    }
+
+    if (!text) return null;
+
+    return (
+      <View style={styles.previousRow}>
+        <Ionicons name="time-outline" size={10} color="#8b92a5" style={{ marginRight: 4 }} />
+        <Text style={styles.previousText}>Previously: {text}</Text>
+      </View>
+    );
+  };
 
   return (
-    <View style={styles.setRow}>
-      <Pressable onPress={() => onDelete(set.id!)} style={styles.minusBtn}>
-        <Ionicons name="remove-circle-outline" size={20} color="#d94b4b" />
-      </Pressable>
-      <Text style={[styles.setCellText, { width: 30, fontWeight: '700', textAlign: 'center' }]}>{index + 1}</Text>
-      <Text style={[styles.setCellText, { flex: 1.5, color: '#888', paddingLeft: 8 }]}>
-        {prevSet ? `${prevSet.weight}kg x ${prevSet.reps}` : '-'}
-      </Text>
-      <View style={[styles.setInputContainer, { flex: 1, marginRight: 8 }]}>
-        <TextInput
-          style={styles.setRowInput}
-          keyboardType="numeric"
-          value={localWeight}
-          onChangeText={setLocalWeight}
-          placeholder="0"
-        />
+    <View style={{ marginBottom: 12 }}>
+      <View style={styles.setRow}>
+        <Pressable onPress={() => onDelete(set.id!)} style={styles.minusBtn}>
+          <Ionicons name="remove-circle-outline" size={20} color="#d94b4b" />
+        </Pressable>
+        <Text style={[styles.setCellText, { width: 30, fontWeight: '700', textAlign: 'center' }]}>{index + 1}</Text>
+
+        {showHistory && (
+          <View style={{ flex: 1.2, display: 'none' }} />
+        )}
+
+        {(trackingType === 'strength') && (
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8 }]}>
+            <TextInput
+              style={styles.setRowInput}
+              keyboardType="numeric"
+              value={localWeight}
+              onChangeText={setLocalWeight}
+              placeholder="0"
+            />
+          </View>
+        )}
+
+        {(trackingType === 'strength' || trackingType === 'bodyweight') && (
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8 }]}>
+            <TextInput
+              style={styles.setRowInput}
+              keyboardType="numeric"
+              value={localReps}
+              onChangeText={setLocalReps}
+              placeholder="0"
+            />
+          </View>
+        )}
+
+        {(trackingType === 'cardio' || trackingType === 'cardio-distance' || trackingType === 'timed') && (
+          <View style={[styles.setInputContainer, { flex: 1.2, marginRight: 8, flexDirection: 'row', alignItems: 'center', paddingRight: 4 }]}>
+            <TextInput
+              style={[styles.setRowInput, { flex: 1 }]}
+              value={localDuration}
+              onChangeText={setLocalDuration}
+              placeholder="0:00"
+            />
+            <Pressable onPress={toggleTimer} style={{ padding: 4 }}>
+              <Ionicons name={isTimerActive ? "pulse" : "play-circle"} size={22} color={isTimerActive ? "#5C4AE4" : "#5C4AE4"} />
+            </Pressable>
+          </View>
+        )}
+
+        {(trackingType === 'cardio' || trackingType === 'cardio-distance') && (
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8 }]}>
+            <TextInput
+              style={styles.setRowInput}
+              keyboardType="numeric"
+              value={localCalories}
+              onChangeText={setLocalCalories}
+              placeholder="kcal"
+            />
+          </View>
+        )}
+
+        {(trackingType === 'cardio-distance') && (
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8 }]}>
+            <TextInput
+              style={styles.setRowInput}
+              keyboardType="numeric"
+              value={localDistance}
+              onChangeText={setLocalDistance}
+              placeholder="km"
+            />
+          </View>
+        )}
+
+        <Pressable
+          style={[styles.checkBtn, set.is_completed ? styles.checkBtnComplete : null]}
+          onPress={() => {
+            onSave(
+              set.id!,
+              Number(localWeight),
+              Number(localReps),
+              set.is_completed ? 0 : 1,
+              parseDuration(localDuration),
+              Number(localCalories),
+              Number(localDistance)
+            );
+          }}
+        >
+          <Ionicons name="checkmark" size={16} color="#fff" />
+        </Pressable>
       </View>
-      <View style={[styles.setInputContainer, { flex: 1, marginRight: 8 }]}>
-        <TextInput
-          style={styles.setRowInput}
-          keyboardType="numeric"
-          value={localReps}
-          onChangeText={setLocalReps}
-          placeholder="0"
-        />
-      </View>
-      <Pressable
-        style={[styles.checkBtn, set.is_completed ? styles.checkBtnComplete : null]}
-        onPress={() => onSave(set.id!, Number(localWeight), Number(localReps), set.is_completed ? 0 : 1)}
-      >
-        <Ionicons name="checkmark" size={16} color="#fff" />
-      </Pressable>
+      {showHistory && renderPrevious()}
     </View>
   );
 }
 
-function ReadOnlySetRow({ set, index }: { set: DatabaseSet; index: number }) {
+function ReadOnlySetRow({ set, index, trackingType }: { set: DatabaseSet; index: number, trackingType: TrackingType }) {
   return (
     <View style={styles.setRow}>
       <View style={{ width: 20, marginRight: 10 }} />
       <Text style={[styles.setCellText, { width: 30, fontWeight: '700', textAlign: 'center' }]}>{index + 1}</Text>
-      <Text style={[styles.setCellText, { flex: 1.5, paddingLeft: 8 }]}>
-        {set.weight > 0 || set.reps > 0 ? `${set.weight}kg x ${set.reps}` : '-'}
-      </Text>
-      <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, justifyContent: 'center' }]}>
-        <Text style={[styles.setRowInput, { textAlign: 'center', paddingVertical: 8, fontWeight: '700', color: '#111' }]}>
-          {set.weight || 0}
-        </Text>
-      </View>
-      <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, justifyContent: 'center' }]}>
-        <Text style={[styles.setRowInput, { textAlign: 'center', paddingVertical: 8, fontWeight: '700', color: '#111' }]}>
-          {set.reps || 0}
-        </Text>
-      </View>
-      <View
-        style={[styles.checkBtn, set.is_completed ? styles.checkBtnComplete : null]}
-      >
+
+      {(trackingType === 'strength') && (
+        <>
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, backgroundColor: 'transparent' }]}>
+            <Text style={[styles.setRowInput, { color: '#111' }]}>{set.weight || 0}</Text>
+          </View>
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, backgroundColor: 'transparent' }]}>
+            <Text style={[styles.setRowInput, { color: '#111' }]}>{set.reps || 0}</Text>
+          </View>
+        </>
+      )}
+
+      {(trackingType === 'bodyweight') && (
+        <View style={[styles.setInputContainer, { flex: 2, marginRight: 8, backgroundColor: 'transparent' }]}>
+          <Text style={[styles.setRowInput, { color: '#111' }]}>{set.reps || 0}</Text>
+        </View>
+      )}
+
+      {(trackingType === 'cardio' || trackingType === 'cardio-distance') && (
+        <>
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, backgroundColor: 'transparent' }]}>
+            <Text style={[styles.setRowInput, { color: '#111' }]}>{formatDuration(set.duration)}</Text>
+          </View>
+          <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, backgroundColor: 'transparent' }]}>
+            <Text style={[styles.setRowInput, { color: '#111' }]}>{set.calories || 0}</Text>
+          </View>
+          {trackingType === 'cardio-distance' && (
+            <View style={[styles.setInputContainer, { flex: 1, marginRight: 8, backgroundColor: 'transparent' }]}>
+              <Text style={[styles.setRowInput, { color: '#111' }]}>{set.distance || 0}km</Text>
+            </View>
+          )}
+        </>
+      )}
+
+      {(trackingType === 'timed') && (
+        <View style={[styles.setInputContainer, { flex: 2, marginRight: 8, backgroundColor: 'transparent' }]}>
+          <Text style={[styles.setRowInput, { color: '#111' }]}>{formatDuration(set.duration)}</Text>
+        </View>
+      )}
+
+      <View style={[styles.checkBtn, set.is_completed ? styles.checkBtnComplete : null]}>
         <Ionicons name="checkmark" size={16} color="#fff" />
       </View>
     </View>
@@ -94,16 +255,46 @@ export default function WorkoutScreen() {
 
   const { workoutId, routineName, viewOnly } = useLocalSearchParams();
   const isViewOnly = viewOnly === 'true';
-  const { startRest, isWorkoutActive, startWorkout, finishWorkout, stopRest } = useTimerStore()
+  const { startRest, isWorkoutActive, startWorkout, finishWorkout, stopRest, runningSet } = useTimerStore()
   const [exercises, setExercises] = useState<FullExercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSummary, setShowSummary] = useState(false);
   const [showStartModal, setShowStartModal] = useState(!isViewOnly);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type: 'warning' | 'error' | 'success' | 'info';
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+  const [expandedHistory, setExpandedHistory] = useState<Set<number>>(new Set());
   const insets = useSafeAreaInsets();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ['70%'], []);
+  const snapPoints = useMemo(() => ['50%', '70%'], []);
+
+  const groupedExercises = useMemo(() => {
+    const filtered = ALL_EXERCISES.filter(ex =>
+      ex.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const groups = filtered.reduce((acc, curr) => {
+      const index = acc.findIndex(g => g.title === curr.category);
+      if (index >= 0) {
+        acc[index].data.push(curr.name);
+      } else {
+        acc.push({ title: curr.category, data: [curr.name] });
+      }
+      return acc;
+    }, [] as { title: string, data: string[] }[]);
+
+    return groups;
+  }, [searchQuery]);
 
   useEffect(() => { loadExercises() }, [workoutId]);
 
@@ -138,22 +329,59 @@ export default function WorkoutScreen() {
     router.back();
   };
 
+  const showAlert = (title: string, message: string, type: 'warning' | 'error' | 'success' | 'info' = 'info') => {
+    setAlertModal({ visible: true, title, message, type });
+  };
+
+  const validateWorkout = () => {
+    if (exercises.length === 0) {
+      showAlert("Empty Workout", "Please add at least one exercise before finishing.", "error");
+      return false;
+    }
+    for (const ex of exercises) {
+      if (ex.sets.length === 0) {
+        showAlert("Incomplete Session", `Please add at least one set for "${ex.name}" or remove the movement.`, "warning");
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleFinishPress = () => {
+    if (validateWorkout()) {
+      setShowSummary(true);
+    }
+  };
+
+  const handleStop = async () => {
+    if (!workoutId) return;
+    if (!validateWorkout()) return;
+    try {
+      await WorkoutRepository.finishWorkout(Number(workoutId));
+      finishWorkout();
+      setShowStartModal(false);
+      setShowSummary(true);
+    } catch (error) {
+      console.error("Failed to stop workout:", error);
+    }
+  };
+
   const handleStartNew = () => {
     finishWorkout();
     startWorkout(String(workoutId), String(routineName || "Active Workout"));
     setShowStartModal(false);
   };
 
-  const handleUpdateSet = async (id: number, weight: number, reps: number, completed: number) => {
+  const handleUpdateSet = async (id: number, weight: number, reps: number, completed: number, duration: number = 0, calories: number = 0, distance: number = 0) => {
     try {
-      await WorkoutRepository.updateSet(id, weight, reps, completed);
+      await WorkoutRepository.updateSet(id, weight, reps, completed, duration, calories, distance);
 
       if (completed === 1) {
         startRest(60)
       }
       setExercises(prev => prev.map(ex => ({
         ...ex,
-        sets: ex.sets.map(s => s.id === id ? { ...s, weight, reps, is_completed: completed } : s)
+        sets: ex.sets.map(s => s.id === id ? { ...s, weight, reps, is_completed: completed, duration, calories, distance } : s)
       })));
     } catch (error) {
       console.error("Failed to update set:", error);
@@ -174,6 +402,11 @@ export default function WorkoutScreen() {
 
   const handleAddExercise = async (name: string) => {
     if (!workoutId) return;
+    if (exercises.some(ex => ex.name === name)) {
+      showAlert("Duplicate Movement", `"${name}" is already in your workout list.`, "warning");
+      bottomSheetModalRef.current?.dismiss();
+      return;
+    }
     try {
       const newId = await WorkoutRepository.addExerciseToWorkout(Number(workoutId), name);
       const prevSets = await WorkoutRepository.getPreviousPerformance(name, Number(workoutId));
@@ -187,8 +420,8 @@ export default function WorkoutScreen() {
 
   const handleAddSet = async (exerciseId: number) => {
     try {
-      const newSetId = await WorkoutRepository.addSetToExercise(exerciseId, 0, 0);
-      const newSet = { id: newSetId, exercise_id: exerciseId, weight: 0, reps: 0, is_completed: 0 };
+      const newSetId = await WorkoutRepository.addSetToExercise(exerciseId, 0, 0, 0, 0, 0);
+      const newSet: DatabaseSet = { id: newSetId, exercise_id: exerciseId, weight: 0, reps: 0, duration: 0, calories: 0, distance: 0, is_completed: 0 };
       setExercises(prev => prev.map(ex => ex.id === exerciseId ? { ...ex, sets: [...ex.sets, newSet] } : ex));
     } catch (error) {
       console.error("Failed to add set:", error);
@@ -204,18 +437,62 @@ export default function WorkoutScreen() {
     }
   };
 
+  const handleTimedSetComplete = (duration: number) => {
+    if (!runningSet) return;
+    
+    // Find current set values to preserve them
+    let targetSet: DatabaseSet | undefined;
+    exercises.forEach(ex => {
+      const found = ex.sets.find(s => s.id === runningSet.setId);
+      if (found) targetSet = found;
+    });
+
+    if (targetSet) {
+      handleUpdateSet(
+        targetSet.id!,
+        targetSet.weight || 0,
+        targetSet.reps || 0,
+        1, // complete
+        duration,
+        targetSet.calories || 0,
+        targetSet.distance || 0
+      );
+    }
+  };
+
+  const toggleHistory = (exerciseId: number) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedHistory(prev => {
+      const next = new Set(prev);
+      if (next.has(exerciseId)) next.delete(exerciseId);
+      else next.add(exerciseId);
+      return next;
+    });
+  };
+
   const calculateStats = () => {
     let totalVolume = 0;
     let totalSets = 0;
+    let totalDistance = 0;
+    let totalCalories = 0;
+
     exercises.forEach(ex => {
       ex.sets.forEach(s => {
         if (s.is_completed) {
           totalVolume += (s.weight * s.reps);
           totalSets++;
+          totalDistance += (s.distance || 0);
+          totalCalories += (s.calories || 0);
         }
       });
     });
-    return { volume: totalVolume, sets: totalSets, exercises: exercises.length };
+    return {
+      volume: totalVolume,
+      sets: totalSets,
+      exercises: exercises.length,
+      distance: totalDistance,
+      calories: totalCalories
+    };
   };
 
   const confirmFinish = async () => {
@@ -265,32 +542,87 @@ export default function WorkoutScreen() {
                 <Text style={styles.exerciseName}>{item.name}</Text>
               </View>
               {!isViewOnly && (
-                <Pressable style={styles.iconBtn} onPress={() => handleDeleteExercise(item.id!)}>
-                  <Ionicons name="trash-outline" size={20} color="#d94b4b" />
-                </Pressable>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <Pressable
+                    onPress={() => toggleHistory(item.id!)}
+                    style={[styles.iconBtn]}
+                  >
+                    <Ionicons name={"time-outline"} size={22} color="#5C4AE4" />
+                  </Pressable>
+                  <Pressable style={styles.iconBtn} onPress={() => handleDeleteExercise(item.id!)}>
+                    <Ionicons name="trash-outline" size={20} color="#d94b4b" />
+                  </Pressable>
+                </View>
               )}
+
             </View>
 
             <View style={styles.setsHeader}>
-              {!isViewOnly && <View style={{ width: 20, marginRight: 10 }} />}
-              <Text style={[styles.setHeaderText, { width: 30, textAlign: 'center' }]}>SET</Text>
-              <Text style={[styles.setHeaderText, { flex: 1.5, paddingLeft: 8 }]}>{isViewOnly ? 'WEIGHT × REPS' : 'PREVIOUS'}</Text>
-              <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center' }]}>kg</Text>
-              <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center' }]}>REPS</Text>
+              {!isViewOnly && (
+                <>
+                  <View style={{ width: 20, marginRight: 10 }} />
+                  <Text style={[styles.setHeaderText, { width: 30, textAlign: 'center' }]}>SET</Text>
+                </>
+              )}
+              {isViewOnly && (
+                <>
+                  <View style={{ width: 20, marginRight: 10 }} />
+                  <Text style={[styles.setHeaderText, { width: 30, textAlign: 'center' }]}>SET</Text>
+                </>
+              )}
+
+              {(() => {
+                const exDef = ALL_EXERCISES.find(e => e.name === item.name);
+                const type = exDef?.trackingType || 'strength';
+
+                if (type === 'strength') {
+                  return (
+                    <>
+                      <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center', marginRight: 8 }]}>kg</Text>
+                      <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center', marginRight: 8 }]}>REPS</Text>
+                    </>
+                  );
+                } else if (type === 'cardio') {
+                  return (
+                    <>
+                      <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center', marginRight: 8 }]}>TIME</Text>
+                      <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center', marginRight: 8 }]}>KCAL</Text>
+                    </>
+                  );
+                } else if (type === 'cardio-distance') {
+                  return (
+                    <>
+                      <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center', marginRight: 8 }]}>TIME</Text>
+                      <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center', marginRight: 8 }]}>KCAL</Text>
+                      <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center', marginRight: 8 }]}>KM</Text>
+                    </>
+                  );
+                } else if (type === 'bodyweight') {
+                  return <Text style={[styles.setHeaderText, { flex: 2, textAlign: 'center', marginRight: 8 }]}>REPS</Text>;
+                } else if (type === 'timed') {
+                  return <Text style={[styles.setHeaderText, { flex: 2, textAlign: 'center', marginRight: 8 }]}>TIME</Text>;
+                }
+              })()}
               <View style={{ width: 32 }} />
             </View>
 
             {item.sets.length > 0 ? (
-              item.sets.map((set, sIdx) => (
-                isViewOnly ? (
-                  <ReadOnlySetRow key={set.id} set={set} index={sIdx} />
+              item.sets.map((set, sIdx) => {
+                const exDef = ALL_EXERCISES.find(e => e.name === item.name);
+                const type = exDef?.trackingType || 'strength';
+                const showHistory = expandedHistory.has(item.id!);
+                return isViewOnly ? (
+                  <ReadOnlySetRow key={set.id} set={set} index={sIdx} trackingType={type} />
                 ) : (
                   <WorkoutSetRow
                     key={set.id} set={set} index={sIdx}
+                    trackingType={type}
+                    exerciseName={item.name}
+                    showHistory={showHistory}
                     prevSet={item.prevSets?.[sIdx]} onSave={handleUpdateSet} onDelete={handleDeleteSet}
                   />
-                )
-              ))
+                );
+              })
             ) : (
               <View style={{ paddingVertical: 10, alignItems: 'center' }}>
                 <Text style={{ color: '#8b92a5', fontSize: 12, fontWeight: '600' }}>No sets recorded</Text>
@@ -311,7 +643,7 @@ export default function WorkoutScreen() {
               <View style={styles.addCircle}><Ionicons name="add" size={20} color="#5C4AE4" /></View>
               <Text style={styles.addBtnText}>INJECT NEW MOVEMENT</Text>
             </Pressable>
-            <AppButton label="Finish Workout" onPress={() => setShowSummary(true)} />
+            <AppButton label="Finish Workout" onPress={handleFinishPress} />
           </>
         )}
       </ScrollView>
@@ -328,25 +660,39 @@ export default function WorkoutScreen() {
             </View>
 
             <Text style={styles.resumeTitle}>
-              {isWorkoutActive ? "Active Session" : "Start Workout?"}
+              {isWorkoutActive ? "Active Session Found" : "Start Workout?"}
             </Text>
 
             <Text style={styles.resumeSubtitle}>
               {isWorkoutActive
-                ? "You have a workout session already in progress. Would you like to resume it or start fresh?"
+                ? "You have a workout session currently in progress. Would you like to resume it or finish and view your results?"
                 : "Are you ready to begin? The timer will start counting once you confirm your session."}
             </Text>
 
             <View style={{ width: '100%', gap: 12 }}>
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <AppButton label={isWorkoutActive ? "Resume" : "Start Now"} style={{ flex: 1 }} onPress={handleAccept} />
+              <View style={{ flexDirection: 'column', gap: 12 }}>
+                <AppButton
+                  label={isWorkoutActive ? "Resume Session" : "Start Now"}
+                  style={{ width: '100%' }}
+                  onPress={handleAccept}
+                />
                 {isWorkoutActive && (
-                  <AppButton label='Start New' style={{ flex: 1 }} onPress={handleStartNew} />
+                  <AppButton
+                    label='End & View Summary'
+                    variant="secondary"
+                    style={{ width: '100%' }}
+                    onPress={handleStop}
+                  />
                 )}
               </View>
 
-              <Pressable style={styles.cancelLink} onPress={handleCancel}>
-                <Text style={styles.cancelLinkText}>Not yet, go back</Text>
+              <Pressable
+                style={styles.cancelLink}
+                onPress={isWorkoutActive ? handleStartNew : handleCancel}
+              >
+                <Text style={[styles.cancelLinkText, isWorkoutActive && { color: '#d94b4b' }]}>
+                  {isWorkoutActive ? "Discard & Start Fresh" : "Not yet, go back"}
+                </Text>
               </Pressable>
             </View>
           </Animated.View>
@@ -362,17 +708,27 @@ export default function WorkoutScreen() {
             <Text style={styles.summaryTitle}>Workout Complete!</Text>
             <Text style={styles.summarySubtitle}>Great job! You crushed your session.</Text>
             <View style={styles.statsGrid}>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{stats.volume.toString()}</Text>
-                <Text style={styles.statLabel}>VOLUME (KG)</Text>
-              </View>
+              {stats.volume > 0 && (
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{stats.volume.toFixed(1)}</Text>
+                  <Text style={styles.statLabel}>VOLUME (KG)</Text>
+                </View>
+              )}
+              {stats.distance > 0 && (
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{stats.distance.toFixed(2)}</Text>
+                  <Text style={styles.statLabel}>DISTANCE (KM)</Text>
+                </View>
+              )}
+              {stats.calories > 0 && (
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{Math.round(stats.calories)}</Text>
+                  <Text style={styles.statLabel}>KCAL</Text>
+                </View>
+              )}
               <View style={styles.statBox}>
                 <Text style={styles.statValue}>{stats.sets.toString()}</Text>
                 <Text style={styles.statLabel}>SETS DONE</Text>
-              </View>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{stats.exercises.toString()}</Text>
-                <Text style={styles.statLabel}>EXERCISES</Text>
               </View>
             </View>
             <AppButton label='Done' onPress={confirmFinish} style={{ width: '100%', }} />
@@ -385,9 +741,10 @@ export default function WorkoutScreen() {
         enableOverDrag={false} backdropComponent={renderBackdrop}
         backgroundStyle={{ borderRadius: 24, backgroundColor: '#fff' }}
       >
-        <BottomSheetFlatList
-          data={EXERCISE_NAMES.filter(ex => ex.toLowerCase().includes(searchQuery.toLowerCase()))}
-          keyExtractor={(item) => item}
+        <BottomSheetSectionList
+          sections={groupedExercises}
+          keyExtractor={(item) => item as string}
+          stickySectionHeadersEnabled={false}
           ListHeaderComponent={
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
@@ -405,16 +762,36 @@ export default function WorkoutScreen() {
               </View>
             </View>
           }
-          renderItem={({ item }) => (
-            <Pressable style={[styles.exerciseItem, { marginHorizontal: 20 }]} onPress={() => handleAddExercise(item)}>
-              <View style={styles.exerciseIcon}><Ionicons name="barbell-outline" size={20} color="#5C4AE4" /></View>
-              <Text style={styles.exerciseItemText}>{item}</Text>
+          renderSectionHeader={({ section: { title } }) => (
+            <View style={[styles.sectionHeader, { marginHorizontal: 20 }]}>
+              <Text style={styles.sectionHeaderText}>{title}</Text>
+            </View>
+          )}
+          renderItem={({ item, section }) => (
+            <Pressable style={[styles.exerciseItem, { marginHorizontal: 20 }]} onPress={() => handleAddExercise(item as string)}>
+              <View style={styles.exerciseIcon}>
+                <Image
+                  source={CategoryImages[section.title] || require('../assets/images/logo.png')}
+                  style={{ width: 60, height: 60, resizeMode: 'contain' }}
+                />
+              </View>
+              <Text style={styles.exerciseItemText}>{item as string}</Text>
               <Ionicons name="chevron-forward" size={18} color="#5C4AE4" />
             </Pressable>
           )}
           contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         />
       </BottomSheetModal>
+
+      <TimedSetModal onComplete={handleTimedSetComplete} />
+
+      <AppAlert
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        onConfirm={() => setAlertModal(prev => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }
@@ -441,6 +818,8 @@ const styles = StyleSheet.create({
   checkBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#d0d5df', justifyContent: 'center', alignItems: 'center' },
   checkBtnComplete: { backgroundColor: '#4caf50' },
   minusBtn: { width: 20, marginRight: 10, justifyContent: 'center', alignItems: 'center' },
+  previousRow: { marginLeft: 64, marginTop: -4, marginBottom: 8, flexDirection: 'row', alignItems: 'center' },
+  previousText: { fontSize: 11, color: '#8b92a5', fontWeight: '600', fontStyle: 'italic' },
   addSetBtn: { alignSelf: 'center', paddingVertical: 10, marginTop: 4 },
   addSetBtnText: { fontSize: 12, fontWeight: '700', color: '#5C4AE4' },
   addBtn: { alignItems: 'center', marginTop: 10, marginBottom: 20, padding: 20, borderRadius: 12, backgroundColor: '#fff' },
@@ -453,7 +832,7 @@ const styles = StyleSheet.create({
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f4f7', paddingHorizontal: 16, borderRadius: 12, marginBottom: 20 },
   searchInput: { flex: 1, paddingVertical: 12, marginLeft: 10, fontSize: 15, fontWeight: '600', color: '#111' },
   exerciseItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f5' },
-  exerciseIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  exerciseIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   exerciseItemText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#333' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   summaryCard: { backgroundColor: '#fff', width: '100%', borderRadius: 24, padding: 32, alignItems: 'center', zIndex: 10 },
@@ -472,4 +851,6 @@ const styles = StyleSheet.create({
   resumeSubtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 30, lineHeight: 22 },
   cancelLink: { paddingVertical: 10, alignItems: "center" },
   cancelLinkText: { color: '#888', fontSize: 13, fontWeight: '700' },
+  sectionHeader: { marginBottom: 10, marginTop: 16 },
+  sectionHeaderText: { fontSize: 13, fontWeight: '800', color: '#8b92a5', letterSpacing: 1, textTransform: 'uppercase' },
 });

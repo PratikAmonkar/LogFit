@@ -1,24 +1,24 @@
 import { useTimerStore } from '@/store/userTimerStore';
-import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import {
+import Animated, {
+    useAnimatedStyle,
     useSharedValue
 } from 'react-native-reanimated';
+import WorkoutStatusModal from './WorkoutStatusModal';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const WorkoutTimer = () => {
-    const router = useRouter();
-    const { workoutElapsed, isWorkoutActive, activeWorkoutId, activeRoutineName } = useTimerStore();
+    const { workoutElapsed, isWorkoutActive } = useTimerStore();
     const [isReady, setIsReady] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     useEffect(() => {
         if (isWorkoutActive) {
             const timer = setTimeout(() => setIsReady(true), 400);
             return () => clearTimeout(timer);
-        } else {
         }
     }, [isWorkoutActive]);
 
@@ -34,6 +34,12 @@ export const WorkoutTimer = () => {
             translateY.value = Math.max(-20, Math.min(newY, SCREEN_HEIGHT - 200));
         });
 
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateY: translateY.value }],
+        };
+    });
+
     if (!isWorkoutActive) return null;
 
     const formatTime = (seconds: number) => {
@@ -42,39 +48,37 @@ export const WorkoutTimer = () => {
         return `${m}:${s.toString().padStart(2, '0')}`;
     };
 
-    const handleNavigate = () => {
-        if (activeWorkoutId) {
-            router.push({
-                pathname: '/workout',
-                params: {
-                    workoutId: activeWorkoutId,
-                    routineName: activeRoutineName
-                }
-            });
-        }
+    const handlePress = () => {
+        setIsModalVisible(true);
     };
 
     return (
-        <GestureDetector gesture={panGesture}>
-            <View
-                style={[styles.container,]}
-            >
-                <Pressable
-                    style={[
-                        styles.bubble,
-                        {
-                            shadowOpacity: isReady ? 0.2 : 0,
-                            elevation: isReady ? 12 : 0,
-                        }
-                    ]}
-                    onPress={handleNavigate}
+        <>
+            <GestureDetector gesture={panGesture}>
+                <Animated.View
+                    style={[styles.container, animatedStyle]}
                 >
-                    <View style={styles.content}>
-                        <Text style={styles.timeText}>{formatTime(workoutElapsed)}</Text>
-                    </View>
-                </Pressable>
-            </View>
-        </GestureDetector>
+                    <Pressable
+                        style={[
+                            styles.bubble,
+                            {
+                                shadowOpacity: isReady ? 0.2 : 0,
+                                elevation: isReady ? 12 : 0,
+                            }
+                        ]}
+                        onPress={handlePress}
+                    >
+                        <View style={styles.content}>
+                            <Text style={styles.timeText}>{formatTime(workoutElapsed)}</Text>
+                        </View>
+                    </Pressable>
+                </Animated.View>
+            </GestureDetector>
+            <WorkoutStatusModal 
+                visible={isModalVisible} 
+                onClose={() => setIsModalVisible(false)} 
+            />
+        </>
     );
 };
 

@@ -28,6 +28,9 @@ export const initDatabase = async () => {
         weight REAL,
         reps INTEGER,
         is_completed INTEGER DEFAULT 0,
+        duration INTEGER DEFAULT 0,
+        calories REAL DEFAULT 0,
+        distance REAL DEFAULT 0,
         FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE
       );
 
@@ -62,7 +65,6 @@ export const initDatabase = async () => {
         name TEXT NOT NULL,
         FOREIGN KEY (routine_id) REFERENCES routines (id) ON DELETE CASCADE
       );
-
     `);
     console.log('Database initialized successfully');
   } catch (error) {

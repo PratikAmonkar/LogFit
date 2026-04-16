@@ -1,11 +1,12 @@
 import AppButton from '@/components/AppButton';
-import { EXERCISE_NAMES } from '@/constants/exercise_list';
+import { CategoryImages } from '@/constants/category_images';
+import { ALL_EXERCISES } from '@/constants/exercise_list';
 import { RoutineRepository } from '@/services/routineRepository';
 import { WorkoutRepository } from '@/services/workoutRepository';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Image, Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ExercisesScreen() {
@@ -33,9 +34,23 @@ export default function ExercisesScreen() {
         router.replace({ pathname: '/workout', params: { workoutId: newId, routineName } });
     };
 
-    const filteredExercises = EXERCISE_NAMES.filter(name =>
-        name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const groupedExercises = useMemo(() => {
+        const filtered = ALL_EXERCISES.filter(ex =>
+            ex.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        const groups = filtered.reduce((acc, curr) => {
+            const index = acc.findIndex(g => g.title === curr.category);
+            if (index >= 0) {
+                acc[index].data.push(curr.name);
+            } else {
+                acc.push({ title: curr.category, data: [curr.name] });
+            }
+            return acc;
+        }, [] as { title: string, data: string[] }[]);
+
+        return groups;
+    }, [searchQuery]);
 
     return (
         <View style={styles.container}>
@@ -60,23 +75,31 @@ export default function ExercisesScreen() {
                     />
                 </View>
 
-                <FlatList
-                    data={filteredExercises}
+                <SectionList
+                    sections={groupedExercises}
                     contentContainerStyle={[
                         styles.listContainer,
                         { paddingBottom: insets.bottom + 100 }
                     ]}
-                    renderItem={({ item }) => {
+                    renderSectionHeader={({ section: { title } }) => (
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionHeaderText}>{title}</Text>
+                        </View>
+                    )}
+                    renderItem={({ item, section }) => {
                         const isSelected = selected.includes(item);
                         return (
                             <Pressable
                                 style={[styles.exerciseItem, isSelected && styles.selectedItem]}
                                 onPress={() => toggleExercise(item)}
                             >
-                                <View style={[styles.exerciseIcon, isSelected && styles.selectedIcon]}>
-                                    <Ionicons name="barbell-outline" size={20} color={isSelected ? "#fff" : "#5C4AE4"} />
+                                <View style={[styles.exerciseIcon]}>
+                                    <Image
+                                        source={CategoryImages[section.title] || require('../assets/images/logo.png')}
+                                        style={{ width: 60, height: 60, resizeMode: 'contain' }}
+                                    />
                                 </View>
-                                <Text style={[styles.exerciseItemText, isSelected && styles.selectedText]}>{item}</Text>
+                                <Text style={[styles.exerciseItemText, isSelected && styles.selectedText]} numberOfLines={2}>{item}</Text>
                                 <Ionicons
                                     name={isSelected ? "checkbox" : "square-outline"}
                                     size={22}
@@ -87,6 +110,7 @@ export default function ExercisesScreen() {
                     }}
                     keyExtractor={(item) => item}
                     showsVerticalScrollIndicator={false}
+                    stickySectionHeadersEnabled={false}
                 />
                 <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
                     <AppButton label={`Confirm & Start ${selected.length}`} onPress={handleConfirm} />
@@ -116,9 +140,11 @@ const styles = StyleSheet.create({
         marginBottom: 10
     },
     selectedItem: { backgroundColor: '#e6f0fa', borderColor: '#0B63C6' },
-    exerciseIcon: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#EEF4FF', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-    selectedIcon: { backgroundColor: '#0B63C6' },
-    exerciseItemText: { flex: 1, fontSize: 16, fontWeight: '700', color: '#333' },
+    exerciseIcon: { width: 44, height: 44, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+    // selectedIcon: { backgroundColor: '#0B63C6' },
+    exerciseItemText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#333' },
     selectedText: { color: '#0B63C6' },
     footer: { padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f0f0f5' },
+    sectionHeader: { marginBottom: 12, marginTop: 8 },
+    sectionHeaderText: { fontSize: 13, fontWeight: '800', color: '#8b92a5', letterSpacing: 1, textTransform: 'uppercase' },
 });

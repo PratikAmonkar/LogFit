@@ -5,6 +5,9 @@ export interface DatabaseSet {
   exercise_id: number;
   weight: number;
   reps: number;
+  duration: number;
+  calories: number;
+  distance: number;
   is_completed: number;
 }
 
@@ -67,22 +70,28 @@ export const WorkoutRepository = {
     );
   },
 
-  async addSetToExercise(exercise_id: number, weight: number, reps: number): Promise<number> {
+  async addSetToExercise(exercise_id: number, weight: number, reps: number, duration: number = 0, calories: number = 0, distance: number = 0): Promise<number> {
     const result = await db.runAsync(
-      'INSERT INTO sets (exercise_id, weight, reps) VALUES (?, ?, ?)',
+      'INSERT INTO sets (exercise_id, weight, reps, duration, calories, distance) VALUES (?, ?, ?, ?, ?, ?)',
       exercise_id,
       weight,
-      reps
+      reps,
+      duration,
+      calories,
+      distance
     );
     return result.lastInsertRowId;
   },
 
-  async updateSet(id: number, weight: number, reps: number, is_completed: number): Promise<void> {
+  async updateSet(id: number, weight: number, reps: number, is_completed: number, duration: number = 0, calories: number = 0, distance: number = 0): Promise<void> {
     await db.runAsync(
-      'UPDATE sets SET weight = ?, reps = ?, is_completed = ? WHERE id = ?',
+      'UPDATE sets SET weight = ?, reps = ?, is_completed = ?, duration = ?, calories = ?, distance = ? WHERE id = ?',
       weight,
       reps,
       is_completed,
+      duration,
+      calories,
+      distance,
       id
     );
   },
@@ -222,11 +231,14 @@ export const WorkoutRepository = {
 
       for (const s of data.sets) {
         await db.runAsync(
-          'INSERT INTO sets (id, exercise_id, weight, reps, is_completed) VALUES (?, ?, ?, ?, ?)',
+          'INSERT INTO sets (id, exercise_id, weight, reps, duration, calories, distance, is_completed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           s.id ?? null,
           s.exercise_id,
           s.weight,
           s.reps,
+          s.duration ?? 0,
+          s.calories ?? 0,
+          s.distance ?? 0,
           s.is_completed ?? 0
         );
       }

@@ -63,7 +63,15 @@ export default function WelcomeScreen() {
       require('../assets/images/onboarding2.png'),
       require('../assets/images/onboarding3.png'),
       require('../assets/images/male_fitness_model.png'),
-      require('../assets/images/female_fitness_model.png'),
+      require('../assets/images/abs.png'),
+      require('../assets/images/back.png'),
+      require('../assets/images/bicep.png'),
+      require('../assets/images/cardio.png'),
+      require('../assets/images/chest.png'),
+      require('../assets/images/forearm.png'),
+      require('../assets/images/leg.png'),
+      require('../assets/images/shoulder.png'),
+      require('../assets/images/tricep.png'),
     ];
     await Promise.allSettled(
       images.map(async (img) => {

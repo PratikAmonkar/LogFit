@@ -24,11 +24,9 @@ export const RestTimerOverlay = () => {
         strokeDashoffset: withTiming(CIRCLE_LENGTH * (1 - progress), { duration: 1000 }),
     }));
 
-    if (!isResting) return null;
-
     return (
-        <Modal visible={isResting} transparent animationType="none">
-            <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.fullScreen}>
+        <Modal visible={isResting} transparent animationType="fade">
+            <View style={styles.fullScreen}>
                 <BlurView intensity={70} tint="dark" style={StyleSheet.absoluteFill} />
 
                 <Animated.View entering={ZoomIn.duration(400)} style={styles.card}>
@@ -84,7 +82,7 @@ export const RestTimerOverlay = () => {
                         </Pressable>
                     </View>
                 </Animated.View>
-            </Animated.View>
+            </View>
         </Modal>
     );
 };
