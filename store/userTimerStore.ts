@@ -14,10 +14,10 @@ interface TimerState {
     restTotalTime: number;
     isResting: boolean;
 
-    // Set Timer State
     runningSet: { setId: number, exerciseName: string, startTime: number } | null;
     setElapsed: number;
     isSetTimerModalOpen: boolean;
+    isStatusModalOpen: boolean;
 
     startWorkout: (id: string, name: string) => void;
     finishWorkout: () => void;
@@ -28,6 +28,7 @@ interface TimerState {
     startSetTimer: (setId: number, exerciseName: string) => void;
     stopSetTimer: () => void;
     toggleSetTimerModal: (val: boolean) => void;
+    toggleStatusModal: (val: boolean) => void;
 
     hydrateFromStorage: () => Promise<void>;
     syncElapsed: () => void;
@@ -45,6 +46,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     runningSet: null,
     setElapsed: 0,
     isSetTimerModalOpen: false,
+    isStatusModalOpen: false,
 
     startWorkout: (id, name) => {
         const startTime = Date.now();
@@ -129,6 +131,10 @@ export const useTimerStore = create<TimerState>((set, get) => ({
 
     toggleSetTimerModal: (val) => {
         set({ isSetTimerModalOpen: val });
+    },
+
+    toggleStatusModal: (val) => {
+        set({ isStatusModalOpen: val });
     },
 
     tick: () => {
@@ -220,4 +226,4 @@ export const useTimerStore = create<TimerState>((set, get) => ({
             set(updates as any);
         }
     },
-}));
+}));

@@ -53,7 +53,7 @@ export default function HeightScreen() {
 
   const heights = unit === 'cm'
     ? Array.from({ length: 151 }, (_, i) => i + 100)
-    : Array.from({ length: 56 }, (_, i) => parseFloat(((i + 30) / 10).toFixed(1))); // 3.0 to 8.5 ft
+    : Array.from({ length: 56 }, (_, i) => parseFloat(((i + 30) / 10).toFixed(1)));
 
   const handlePress = async () => {
     if (isEdit) {

@@ -3,10 +3,11 @@ import AppButton from '@/components/AppButton';
 import { StorageRepository } from '@/services/storageRepository';
 import { useUserStore } from '@/store/userStore';
 import { Asset } from 'expo-asset';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import AnimatedRN, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -73,21 +74,20 @@ export default function WelcomeScreen() {
       require('../assets/images/shoulder.png'),
       require('../assets/images/tricep.png'),
     ];
-    await Promise.allSettled(
-      images.map(async (img) => {
-        const asset = Asset.fromModule(img);
-        if (!asset.downloaded) {
-          await asset.downloadAsync();
-        }
-      })
-    );
+
+    const uris = images.map((img) => Asset.fromModule(img).uri);
+
+    await Promise.all([
+      ...images.map((img) => Asset.fromModule(img).downloadAsync()),
+      Image.prefetch(uris),
+    ]);
   };
 
   return (
     <SafeAreaView style={styles.responsiveWrapper}>
       <View style={styles.heroBox}>
         <AnimatedRN.View entering={FadeInDown.delay(100).duration(500)} style={styles.iconCircle}>
-          <Image source={require('../assets/images/logo.png')} style={styles.image} resizeMode="contain" />
+          <Image source={require('../assets/images/logo.png')} style={styles.image} contentFit="contain" cachePolicy="memory-disk" />
         </AnimatedRN.View>
         <AnimatedRN.Text entering={FadeInDown.delay(200).duration(500)} style={styles.title}>
           LogFit

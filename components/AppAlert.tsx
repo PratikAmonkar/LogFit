@@ -10,7 +10,9 @@ interface AppAlertProps {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
     onConfirm: () => void;
+    onCancel?: () => void;
     type?: 'warning' | 'error' | 'success' | 'info';
 }
 
@@ -19,7 +21,9 @@ export default function AppAlert({
     title,
     message,
     confirmText = 'Understood',
+    cancelText = 'Cancel',
     onConfirm,
+    onCancel,
     type = 'info'
 }: AppAlertProps) {
     const getIcon = () => {
@@ -46,11 +50,28 @@ export default function AppAlert({
                     <Text style={styles.title}>{title}</Text>
                     <Text style={styles.message}>{message}</Text>
 
-                    <AppButton
-                        label={confirmText}
-                        onPress={onConfirm}
-                        style={{ width: '100%' }}
-                    />
+                    {onCancel ? (
+                        <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+                            <AppButton
+                                label={cancelText}
+                                variant="secondary"
+                                onPress={onCancel}
+                                style={{ flex: 1 }}
+                            />
+                            <AppButton
+                                label={confirmText}
+                                onPress={onConfirm}
+                                variant={type === 'error' ? 'danger' : 'primary'}
+                                style={{ flex: 1 }}
+                            />
+                        </View>
+                    ) : (
+                        <AppButton
+                            label={confirmText}
+                            onPress={onConfirm}
+                            style={{ width: '100%' }}
+                        />
+                    )}
                 </Animated.View>
             </View>
         </Modal>

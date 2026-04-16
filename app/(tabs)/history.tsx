@@ -49,7 +49,7 @@ export default function HistoryScreen() {
 
     if (activeTab === 'WEEKLY') {
       const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+      startOfWeek.setDate(now.getDate() - now.getDay());
       startOfWeek.setHours(0, 0, 0, 0);
       return history.filter(item => new Date(item.date) >= startOfWeek);
     }

@@ -11,9 +11,8 @@ import WorkoutStatusModal from './WorkoutStatusModal';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const WorkoutTimer = () => {
-    const { workoutElapsed, isWorkoutActive } = useTimerStore();
+    const { workoutElapsed, isWorkoutActive, isStatusModalOpen, toggleStatusModal } = useTimerStore();
     const [isReady, setIsReady] = useState(false);
-    const [isModalVisible, setIsModalVisible] = useState(false);
 
     useEffect(() => {
         if (isWorkoutActive) {
@@ -49,7 +48,7 @@ export const WorkoutTimer = () => {
     };
 
     const handlePress = () => {
-        setIsModalVisible(true);
+        toggleStatusModal(true);
     };
 
     return (
@@ -75,8 +74,8 @@ export const WorkoutTimer = () => {
                 </Animated.View>
             </GestureDetector>
             <WorkoutStatusModal 
-                visible={isModalVisible} 
-                onClose={() => setIsModalVisible(false)} 
+                visible={isStatusModalOpen} 
+                onClose={() => toggleStatusModal(false)} 
             />
         </>
     );

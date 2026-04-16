@@ -1,8 +1,10 @@
+import { APP_LINKS } from '@/constants/links';
 import { DataPortabilityService } from '@/services/dataPortabilityService';
 import { useUserStore } from '@/store/userStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -281,6 +283,22 @@ export default function SettingsScreen() {
                 )}
               </Pressable>
             </View>
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>SUPPORT & LEGAL</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Pressable style={styles.row} onPress={() => WebBrowser.openBrowserAsync(APP_LINKS.PRIVACY_POLICY)}>
+              <View style={[styles.iconBox, { backgroundColor: '#EEF4FF' }]}>
+                <Ionicons name="shield-outline" size={20} color="#5C4AE4" />
+              </View>
+              <View style={styles.rowContent}>
+                <Text style={styles.rowText}>Privacy Policy</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+            </Pressable>
           </View>
         </View>
       </ScrollView>

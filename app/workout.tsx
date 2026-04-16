@@ -8,7 +8,6 @@ import { useTimerStore } from '@/store/userTimerStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetSectionList, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
-import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, LayoutAnimation, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, UIManager, View } from 'react-native';
@@ -253,19 +252,22 @@ export default function WorkoutScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  const { workoutId, routineName, viewOnly } = useLocalSearchParams();
+  const { workoutId, routineName, viewOnly, showSummary: showSummaryParam } = useLocalSearchParams();
   const isViewOnly = viewOnly === 'true';
-  const { startRest, isWorkoutActive, startWorkout, finishWorkout, stopRest, runningSet } = useTimerStore()
+  const { startRest, isWorkoutActive, startWorkout, finishWorkout, stopRest, runningSet, workoutElapsed } = useTimerStore()
   const [exercises, setExercises] = useState<FullExercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [historicalDuration, setHistoricalDuration] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSummary, setShowSummary] = useState(false);
-  const [showStartModal, setShowStartModal] = useState(!isViewOnly);
   const [alertModal, setAlertModal] = useState<{
     visible: boolean;
     title: string;
     message: string;
     type: 'warning' | 'error' | 'success' | 'info';
+    onCancel?: () => void;
+    onConfirm?: () => void;
+    confirmText?: string;
   }>({
     visible: false,
     title: '',
@@ -274,6 +276,7 @@ export default function WorkoutScreen() {
   });
   const [expandedHistory, setExpandedHistory] = useState<Set<number>>(new Set());
   const insets = useSafeAreaInsets();
+  const isClosingRef = useRef(false);
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['50%', '70%'], []);
@@ -298,10 +301,30 @@ export default function WorkoutScreen() {
 
   useEffect(() => { loadExercises() }, [workoutId]);
 
+  useEffect(() => {
+    if (showSummaryParam === 'true') {
+      setShowSummary(true);
+    }
+  }, [showSummaryParam]);
+
+  useEffect(() => {
+    if (isClosingRef.current) return;
+    if (!isViewOnly && !isWorkoutActive && workoutId && showSummaryParam !== 'true') {
+      startWorkout(String(workoutId), String(routineName || "Active Workout"));
+    }
+  }, [workoutId, isViewOnly, isWorkoutActive, showSummaryParam]);
+
   const loadExercises = async () => {
     if (!workoutId) return setIsLoading(false);
     setIsLoading(true);
     try {
+      if (isViewOnly) {
+         const workoutRec = await WorkoutRepository.getWorkoutById(Number(workoutId));
+         if (workoutRec && workoutRec.duration) {
+            setHistoricalDuration(workoutRec.duration);
+         }
+      }
+
       const data = await WorkoutRepository.getExercisesForWorkout(Number(workoutId));
       const fullExercises = await Promise.all(data.map(async (ex) => {
         const sets = await WorkoutRepository.getSetsForExercise(ex.id!);
@@ -317,20 +340,56 @@ export default function WorkoutScreen() {
     }
   };
 
-  const handleAccept = () => {
-    if (!isWorkoutActive) {
-      startWorkout(String(workoutId), String(routineName || "Active Workout"));
-    }
-    setShowStartModal(false);
-  };
-
-  const handleCancel = () => {
-    setShowStartModal(false);
-    router.back();
-  };
-
   const showAlert = (title: string, message: string, type: 'warning' | 'error' | 'success' | 'info' = 'info') => {
     setAlertModal({ visible: true, title, message, type });
+  };
+
+  const clearAlert = () => setAlertModal(prev => ({ ...prev, visible: false }));
+
+  const handleCancelSessionPrompt = () => {
+    setAlertModal({
+      visible: true,
+      title: "Cancel Session?",
+      message: "Are you sure you want to cancel this session? All logged sets and timers will be deleted.",
+      type: "error",
+      confirmText: "Yes, Cancel",
+      onCancel: clearAlert,
+      onConfirm: async () => {
+        clearAlert();
+        if (workoutId) {
+          try {
+            isClosingRef.current = true;
+            await WorkoutRepository.deleteWorkout(Number(workoutId));
+            finishWorkout();
+            router.back();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    });
+  };
+
+  const handleDeleteHistoryPrompt = () => {
+    setAlertModal({
+      visible: true,
+      title: "Delete Workout?",
+      message: "Are you sure you want to delete this workout from your history? This cannot be undone.",
+      type: "error",
+      confirmText: "Yes, Delete",
+      onCancel: clearAlert,
+      onConfirm: async () => {
+        clearAlert();
+        if (workoutId) {
+          try {
+            await WorkoutRepository.deleteWorkout(Number(workoutId));
+            router.back();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    });
   };
 
   const validateWorkout = () => {
@@ -357,19 +416,13 @@ export default function WorkoutScreen() {
     if (!workoutId) return;
     if (!validateWorkout()) return;
     try {
-      await WorkoutRepository.finishWorkout(Number(workoutId));
+      isClosingRef.current = true;
+      await WorkoutRepository.finishWorkout(Number(workoutId), workoutElapsed);
       finishWorkout();
-      setShowStartModal(false);
       setShowSummary(true);
     } catch (error) {
       console.error("Failed to stop workout:", error);
     }
-  };
-
-  const handleStartNew = () => {
-    finishWorkout();
-    startWorkout(String(workoutId), String(routineName || "Active Workout"));
-    setShowStartModal(false);
   };
 
   const handleUpdateSet = async (id: number, weight: number, reps: number, completed: number, duration: number = 0, calories: number = 0, distance: number = 0) => {
@@ -439,8 +492,7 @@ export default function WorkoutScreen() {
 
   const handleTimedSetComplete = (duration: number) => {
     if (!runningSet) return;
-    
-    // Find current set values to preserve them
+
     let targetSet: DatabaseSet | undefined;
     exercises.forEach(ex => {
       const found = ex.sets.find(s => s.id === runningSet.setId);
@@ -452,7 +504,7 @@ export default function WorkoutScreen() {
         targetSet.id!,
         targetSet.weight || 0,
         targetSet.reps || 0,
-        1, // complete
+        1,
         duration,
         targetSet.calories || 0,
         targetSet.distance || 0
@@ -498,7 +550,8 @@ export default function WorkoutScreen() {
   const confirmFinish = async () => {
     if (!workoutId) return;
     try {
-      await WorkoutRepository.finishWorkout(Number(workoutId));
+      isClosingRef.current = true;
+      await WorkoutRepository.finishWorkout(Number(workoutId), workoutElapsed);
       finishWorkout()
       setShowSummary(false);
       (navigation as any).reset({
@@ -528,11 +581,53 @@ export default function WorkoutScreen() {
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={28} color="#111" />
           </Pressable>
+          {isViewOnly && (
+            <Pressable style={styles.backBtn} onPress={handleDeleteHistoryPrompt}>
+              <Ionicons name="trash-outline" size={24} color="#d94b4b" />
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.header}>
           <Text style={styles.title}>{routineName || 'ACTIVE WORKOUT'}</Text>
         </View>
+
+        {isViewOnly && (
+          <View style={{ flexDirection: 'row', marginBottom: 24, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#f0f0f5', justifyContent: 'space-between' }}>
+            {historicalDuration > 0 && (
+               <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: '#111' }} numberOfLines={1} adjustsFontSizeToFit>{formatDuration(historicalDuration)}</Text>
+                <Text style={{ fontSize: 9, fontWeight: '700', color: '#8b92a5', marginTop: 2 }}>TIME</Text>
+              </View>
+            )}
+            {stats.volume > 0 && (
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: '#111' }} numberOfLines={1} adjustsFontSizeToFit>{Math.round(stats.volume)}</Text>
+                <Text style={{ fontSize: 9, fontWeight: '700', color: '#8b92a5', marginTop: 2 }}>VOL(KG)</Text>
+              </View>
+            )}
+            {stats.distance > 0 && (
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: '#111' }} numberOfLines={1} adjustsFontSizeToFit>{stats.distance.toFixed(1)}</Text>
+                <Text style={{ fontSize: 9, fontWeight: '700', color: '#8b92a5', marginTop: 2 }}>DIST(KM)</Text>
+              </View>
+            )}
+            {stats.calories > 0 && (
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: '#111' }} numberOfLines={1} adjustsFontSizeToFit>{Math.round(stats.calories)}</Text>
+                <Text style={{ fontSize: 9, fontWeight: '700', color: '#8b92a5', marginTop: 2 }}>KCAL</Text>
+              </View>
+            )}
+            <View style={{ alignItems: 'center', flex: 1 }}>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#111' }} numberOfLines={1} adjustsFontSizeToFit>{stats.sets}</Text>
+              <Text style={{ fontSize: 9, fontWeight: '700', color: '#8b92a5', marginTop: 2 }}>SETS</Text>
+            </View>
+             <View style={{ alignItems: 'center', flex: 1 }}>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#111' }} numberOfLines={1} adjustsFontSizeToFit>{stats.exercises}</Text>
+              <Text style={{ fontSize: 9, fontWeight: '700', color: '#8b92a5', marginTop: 2 }}>EXER</Text>
+            </View>
+          </View>
+        )}
 
         {exercises.map((item, index) => (
           <Animated.View key={item.id} entering={FadeInUp.delay(index * 100).duration(400)} style={styles.card}>
@@ -644,60 +739,10 @@ export default function WorkoutScreen() {
               <Text style={styles.addBtnText}>INJECT NEW MOVEMENT</Text>
             </Pressable>
             <AppButton label="Finish Workout" onPress={handleFinishPress} />
+            <AppButton label="Cancel session" variant="secondary" onPress={handleCancelSessionPrompt} style={{ marginTop: 8 }} />
           </>
         )}
       </ScrollView>
-
-      <Modal visible={showStartModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill} />
-
-          <Animated.View entering={ZoomIn.duration(400)} style={styles.resumeCard}>
-            <View style={styles.resumeIconOuter}>
-              <View style={styles.iconCircleLarge}>
-                <Ionicons name={isWorkoutActive ? "refresh-circle" : "play"} size={42} color="#5C4AE4" />
-              </View>
-            </View>
-
-            <Text style={styles.resumeTitle}>
-              {isWorkoutActive ? "Active Session Found" : "Start Workout?"}
-            </Text>
-
-            <Text style={styles.resumeSubtitle}>
-              {isWorkoutActive
-                ? "You have a workout session currently in progress. Would you like to resume it or finish and view your results?"
-                : "Are you ready to begin? The timer will start counting once you confirm your session."}
-            </Text>
-
-            <View style={{ width: '100%', gap: 12 }}>
-              <View style={{ flexDirection: 'column', gap: 12 }}>
-                <AppButton
-                  label={isWorkoutActive ? "Resume Session" : "Start Now"}
-                  style={{ width: '100%' }}
-                  onPress={handleAccept}
-                />
-                {isWorkoutActive && (
-                  <AppButton
-                    label='End & View Summary'
-                    variant="secondary"
-                    style={{ width: '100%' }}
-                    onPress={handleStop}
-                  />
-                )}
-              </View>
-
-              <Pressable
-                style={styles.cancelLink}
-                onPress={isWorkoutActive ? handleStartNew : handleCancel}
-              >
-                <Text style={[styles.cancelLinkText, isWorkoutActive && { color: '#d94b4b' }]}>
-                  {isWorkoutActive ? "Discard & Start Fresh" : "Not yet, go back"}
-                </Text>
-              </Pressable>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
 
       <Modal visible={showSummary} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -790,7 +835,9 @@ export default function WorkoutScreen() {
         title={alertModal.title}
         message={alertModal.message}
         type={alertModal.type}
-        onConfirm={() => setAlertModal(prev => ({ ...prev, visible: false }))}
+        confirmText={alertModal.confirmText}
+        onCancel={alertModal.onCancel}
+        onConfirm={alertModal.onConfirm || (() => setAlertModal(prev => ({ ...prev, visible: false })))}
       />
     </SafeAreaView>
   );
@@ -799,7 +846,7 @@ export default function WorkoutScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fc' },
   scrollContent: { padding: 20, paddingBottom: 60 },
-  topNav: { marginBottom: 12, marginLeft: -10 },
+  topNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginLeft: -10, paddingRight: 10 },
   backBtn: { padding: 10, borderRadius: 12 },
   header: { marginBottom: 24 },
   title: { fontSize: 26, fontWeight: '800', color: '#111', width: '100%', lineHeight: 32 },

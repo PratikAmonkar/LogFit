@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
     },
     selectedItem: { backgroundColor: '#e6f0fa', borderColor: '#0B63C6' },
     exerciseIcon: { width: 44, height: 44, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-    // selectedIcon: { backgroundColor: '#0B63C6' },
     exerciseItemText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#333' },
     selectedText: { color: '#0B63C6' },
     footer: { padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f0f0f5' },

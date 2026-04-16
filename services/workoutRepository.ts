@@ -21,6 +21,7 @@ export interface DatabaseWorkout {
   id?: number;
   title: string;
   date?: string;
+  duration?: number;
 }
 
 export const WorkoutRepository = {
@@ -36,6 +37,13 @@ export const WorkoutRepository = {
     );
   },
 
+  async getWorkoutById(id: number): Promise<DatabaseWorkout | null> {
+    return await db.getFirstAsync<DatabaseWorkout>(
+      "SELECT * FROM workouts WHERE id = ?",
+      [id]
+    );
+  },
+
   async getAllWorkouts(): Promise<DatabaseWorkout[]> {
     return await db.getAllAsync<DatabaseWorkout>('SELECT * FROM workouts ORDER BY date DESC');
   },
@@ -46,8 +54,8 @@ export const WorkoutRepository = {
     );
   },
 
-  async finishWorkout(id: number): Promise<void> {
-    await db.runAsync('UPDATE workouts SET is_completed = 1 WHERE id = ?', id);
+  async finishWorkout(id: number, duration: number = 0): Promise<void> {
+    await db.runAsync('UPDATE workouts SET is_completed = 1, duration = ? WHERE id = ?', duration, id);
   },
 
   async deleteWorkout(id: number): Promise<void> {
@@ -148,6 +156,7 @@ export const WorkoutRepository = {
         w.id, 
         w.title, 
         w.date, 
+        IFNULL(w.duration, 0) as duration,
         (SELECT COUNT(*) FROM exercises e WHERE e.workout_id = w.id) as exercise_count,
         (SELECT IFNULL(SUM(s.weight * s.reps), 0) FROM sets s JOIN exercises e ON s.exercise_id = e.id WHERE e.workout_id = w.id AND s.is_completed = 1) as total_volume
       FROM workouts w
@@ -177,7 +186,7 @@ export const WorkoutRepository = {
   async getLatestWorkout() {
     return await db.getFirstAsync<any>(`
       SELECT 
-        w.id, w.title, w.date,
+        w.id, w.title, w.date, IFNULL(w.duration, 0) as duration,
         (SELECT COUNT(*) FROM exercises e WHERE e.workout_id = w.id) as exercise_count,
         (SELECT IFNULL(SUM(s.weight * s.reps), 0) FROM sets s JOIN exercises e ON s.exercise_id = e.id WHERE e.workout_id = w.id AND s.is_completed = 1) as total_volume
       FROM workouts w
@@ -212,11 +221,12 @@ export const WorkoutRepository = {
 
       for (const w of data.workouts) {
         await db.runAsync(
-          'INSERT INTO workouts (id, title, date, is_completed) VALUES (?, ?, ?, ?)',
+          'INSERT INTO workouts (id, title, date, is_completed, duration) VALUES (?, ?, ?, ?, ?)',
           w.id ?? null,
           w.title,
           w.date ?? null,
-          (w as any).is_completed ?? 0
+          (w as any).is_completed ?? 0,
+          w.duration ?? 0
         );
       }
 

@@ -2,6 +2,7 @@ import AppButton from '@/components/AppButton';
 import { DatabaseRoutine, RoutineRepository } from '@/services/routineRepository';
 import { WorkoutRepository } from '@/services/workoutRepository';
 import { useRoutineStore } from '@/store/routineStore';
+import { useTimerStore } from '@/store/userTimerStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -49,11 +50,6 @@ const RoutineCard = ({ routine, index, onEdit, onStart, onDelete }: any) => {
           </Pressable>
         </View>
       </View>
-
-      {/* <Pressable style={styles.startBtn} onPress={() => onStart(routine)}>
-        <Text style={styles.startBtnText}>START ROUTINE</Text>
-        <Ionicons name="arrow-forward" size={16} color="#fff" />
-      </Pressable> */}
       <AppButton label='Start Routine' onPress={() => onStart(routine)} />
     </Animated.View>
   );
@@ -63,6 +59,7 @@ export default function RoutinesScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const { getRoutines, data, addRoutine, updateRoutine, deleteRoutine, isLoading } = useRoutineStore()
+  const { isWorkoutActive, toggleStatusModal } = useTimerStore();
   const insets = useSafeAreaInsets();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -117,25 +114,13 @@ export default function RoutinesScreen() {
     setForm({ ...form, days: updatedDays.join(', ') });
   };
 
-  const updateDuration = (h: number, m: number) => {
-    let dur = '';
-    if (h > 0 && m > 0) dur = `${h} hr ${m} min`;
-    else if (h > 0) dur = `${h} hr`;
-    else dur = `${m} min`;
-    setForm({ ...form, duration: dur });
-  };
-
-  const getDurationValues = () => {
-    const hMatch = form.duration.match(/(\d+)\s*hr/);
-    const mMatch = form.duration.match(/(\d+)\s*min/);
-    return {
-      h: hMatch ? parseInt(hMatch[1]) : 0,
-      m: mMatch ? parseInt(mMatch[1]) : (form.duration.includes('hr') ? 0 : parseInt(form.duration) || 0)
-    };
-  };
-
   const handleStartRoutine = async (routine: DatabaseRoutine) => {
     if (!routine.id) return;
+
+    if (isWorkoutActive) {
+      toggleStatusModal(true);
+      return;
+    }
 
     const existing = await WorkoutRepository.getTodayWorkout(routine.name);
     if (existing) {

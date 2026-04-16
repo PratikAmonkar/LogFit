@@ -12,7 +12,8 @@ export const initDatabase = async () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         date TEXT DEFAULT CURRENT_TIMESTAMP,
-        is_completed INTEGER DEFAULT 0
+        is_completed INTEGER DEFAULT 0,
+        duration INTEGER DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS exercises (
@@ -66,6 +67,7 @@ export const initDatabase = async () => {
         FOREIGN KEY (routine_id) REFERENCES routines (id) ON DELETE CASCADE
       );
     `);
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Database initialization failed:', error);

@@ -20,7 +20,7 @@ interface WorkoutStatusModalProps {
 
 export default function WorkoutStatusModal({ visible, onClose }: WorkoutStatusModalProps) {
     const router = useRouter();
-    const { workoutElapsed, activeRoutineName, activeWorkoutId } = useTimerStore();
+    const { workoutElapsed, activeRoutineName, activeWorkoutId, finishWorkout } = useTimerStore();
 
     const handleResume = () => {
         onClose();
@@ -34,6 +34,8 @@ export default function WorkoutStatusModal({ visible, onClose }: WorkoutStatusMo
             });
         }
     };
+
+
 
     return (
         <Modal visible={visible} transparent animationType="fade">
