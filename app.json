@@ -31,7 +31,9 @@
           "imageWidth": 200,
           "imageHeight": 200
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
